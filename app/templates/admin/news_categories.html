@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Categorías{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-2">
+  <h1 class="text-2xl font-semibold">Categorías de comunicados</h1>
+  {% if editing_category %}<a class="btn btn-secondary" href="{{ url_for('admin.news_categories') }}">Cancelar edición</a>{% endif %}
+</div>
+<form method="post" action="{{ url_for('admin.news_categories') }}" class="card mb-4 grid md:grid-cols-5 gap-3 items-end">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="action" value="{{ 'update' if editing_category else 'create' }}">
+  {% if editing_category %}<input type="hidden" name="category_id" value="{{ editing_category.id }}">{% endif %}
+  <div><label class="label">Nombre</label><input class="input" name="name" required value="{{ editing_category.name if editing_category else '' }}"></div>
+  <div><label class="label">Slug</label><input class="input" name="slug" value="{{ editing_category.slug if editing_category else '' }}"></div>
+  <div><label class="label">Color</label><input class="input" type="color" name="color" value="{{ editing_category.color if editing_category and editing_category.color else '#3a6ea5' }}"></div>
+  <div><label class="label">Descripción</label><input class="input" name="description" value="{{ editing_category.description if editing_category else '' }}"></div>
+  <div><button class="btn btn-primary w-full justify-center">{{ 'Guardar cambios' if editing_category else '+ Crear' }}</button></div>
+</form>
+<div class="card overflow-x-auto">
+  <table class="table">
+    <thead><tr><th>Nombre</th><th>Slug</th><th>Color</th><th></th></tr></thead>
+    <tbody>
+      {% for c in categories %}
+      <tr><td>{{ c.name }}</td><td><code class="text-xs">{{ c.slug }}</code></td><td>{% if c.color %}<span class="inline-block w-5 h-5 rounded" style="background:{{ c.color }}"></span>{% endif %}</td>
+        <td class="text-right"><div class="flex items-center justify-end gap-2"><a class="btn btn-secondary" href="{{ url_for('admin.news_categories', edit_id=c.id) }}">Editar</a><form method="post" action="{{ url_for('admin.news_categories') }}" onsubmit="return confirm('Eliminar?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="category_id" value="{{ c.id }}"><button class="btn btn-danger">×</button></form></div></td>
+      </tr>
+      {% else %}<tr><td colspan="4" class="text-center text-slate-400 py-8">Sin categorías.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

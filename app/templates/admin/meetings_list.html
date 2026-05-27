@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Sesiones del Concejo{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-2">
+  <div>
+    <h1 class="text-2xl font-semibold">Sesiones del Concejo</h1>
+    <p class="text-sm text-slate-500 mt-1">Reuniones públicas, actas y orden del día.</p>
+  </div>
+  <div class="flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('admin.meeting_new') }}">+ Nueva sesión</a>
+  </div>
+</div>
+<div class="card overflow-x-auto">
+  <table class="table">
+    <thead><tr><th>Título</th><th>Fecha</th><th>Estado</th><th>Pública</th><th></th></tr></thead>
+    <tbody>
+      {% for m in meetings %}
+      <tr>
+        <td><a class="font-medium hover:underline" href="{{ url_for('admin.meeting_edit', meeting_id=m.id) }}">{{ m.title }}</a></td>
+        <td>{{ m.meeting_datetime.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td><span class="badge bg-slate-100">{{ m.status }}</span></td>
+        <td>{{ '✓' if m.is_public else '' }}</td>
+        <td class="text-right"><div class="flex items-center justify-end gap-2"><a class="btn btn-secondary" href="{{ url_for('admin.meeting_edit', meeting_id=m.id) }}">Editar</a><form method="post" action="{{ url_for('admin.meeting_delete', meeting_id=m.id) }}" onsubmit="return confirm('Eliminar?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger">×</button></form></div></td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="text-center text-slate-400 py-8">Sin sesiones registradas.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

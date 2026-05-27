@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitud recibida</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#0f172a" style="background:#0f172a;border-radius:16px 16px 0 0;padding:36px 40px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);">{{ municipality_name }}</p>
+            <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3;">Tu solicitud fue recibida ✓</h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td bgcolor="#ffffff" style="background:#ffffff;padding:36px 40px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+              Hola <strong style="color:#0f172a;">{{ applicant_name }}</strong>,
+            </p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+              Recibimos correctamente tu solicitud del trámite <strong style="color:#0f172a;">{{ procedure_title }}</strong>.
+              El equipo de <strong style="color:#0f172a;">{{ municipality_name }}</strong> la procesará y te notificará ante cualquier novedad.
+            </p>
+
+            <!-- Código de seguimiento -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td bgcolor="#0f172a" style="background:#0f172a;border-radius:14px;padding:24px;text-align:center;">
+                  <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.6);">Código de seguimiento</p>
+                  <p style="margin:0;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:0.12em;font-family:'Courier New',monospace;">{{ tracking_code }}</p>
+                  <p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,0.55);">Guardá este código para consultar el estado de tu trámite</p>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.7;">
+              Podés usar el código de seguimiento en el sitio web del municipio, en la sección
+              <strong style="color:#0f172a;">Trámites</strong>, para conocer el estado actualizado de tu solicitud.
+            </p>
+
+            <!-- Detalle del trámite -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:10px;border:1px solid #e2e8f0;margin-bottom:24px;">
+              <tr>
+                <td bgcolor="#f8fafc" style="background:#f8fafc;padding:18px 22px;border-radius:10px;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#64748b;">Trámite solicitado</p>
+                  <p style="margin:0;font-size:15px;color:#0f172a;font-weight:600;">{{ procedure_title }}</p>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:14px;color:#64748b;line-height:1.6;">
+              Si no iniciaste esta solicitud, podés ignorar este correo con seguridad.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td bgcolor="#f1f5f9" style="background:#f1f5f9;border-radius:0 0 16px 16px;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#64748b;">
+              Este es un correo automático de <strong style="color:#374151;">{{ municipality_name }}</strong>. Por favor no respondas a este mensaje.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block title %}Mensaje &middot; {{ msg.subject or msg.id }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ msg.subject or '(sin asunto)' }}</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.contact_list') }}">&#8592; Mensajes</a>
+</div>
+
+<div class="grid md:grid-cols-[minmax(0,1fr)_280px] gap-6">
+  <div class="card">
+    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Contenido del mensaje</p>
+    <div class="whitespace-pre-wrap text-slate-800 leading-relaxed">{{ msg.message }}</div>
+  </div>
+
+  <div class="space-y-4">
+    <div class="card">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">Datos del remitente</p>
+      <div class="space-y-3">
+        <div>
+          <p class="text-xs text-slate-400">Nombre</p>
+          <p class="text-sm font-medium text-slate-900">{{ msg.name }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Correo electrónico</p>
+          <a href="mailto:{{ msg.email }}" class="text-sm font-medium text-blue-600 hover:underline">{{ msg.email }}</a>
+        </div>
+        {% if msg.phone %}
+        <div>
+          <p class="text-xs text-slate-400">Teléfono</p>
+          <a href="tel:{{ msg.phone }}" class="text-sm font-medium text-slate-900">{{ msg.phone }}</a>
+        </div>
+        {% endif %}
+        <div>
+          <p class="text-xs text-slate-400">Recibido</p>
+          <p class="text-sm text-slate-700">{{ msg.created_at.strftime('%d/%m/%Y a las %H:%M') }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Estado</p>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold {% if msg.is_read %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+            {% if msg.is_read %}Leído{% else %}Sin leer{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject or '' }}"
+       class="btn btn-primary w-full justify-center">
+      <i data-lucide="mail" class="w-4 h-4"></i> Responder por correo
+    </a>
+
+    <form method="post" action="{{ url_for('admin.contact_delete', msg_id=msg.id) }}" onsubmit="return confirm('¿Eliminar este mensaje?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger w-full justify-center">
+        <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar mensaje
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

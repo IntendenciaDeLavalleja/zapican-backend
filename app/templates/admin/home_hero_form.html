@@ -1,0 +1,197 @@
+{% extends "admin/base.html" %}
+{% block title %}Hero Principal{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Hero principal</h1>
+    <p class="text-sm text-slate-500 mt-1">Editá la imagen, los textos, los botones y el panel lateral de la portada.</p>
+  </div>
+  <div class="flex gap-2">
+    <a class="btn btn-secondary" href="{{ url_for('admin.media_library') }}">Biblioteca de medios</a>
+    <a class="btn btn-secondary" href="{{ url_for('admin.blocks_list', page_type='home') }}">Bloques Home</a>
+  </div>
+</div>
+
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+    <div class="space-y-4">
+      <div class="card grid md:grid-cols-2 gap-4">
+        <div class="md:col-span-2 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Contenido principal</div>
+            <p class="text-xs text-slate-500 mt-1">Estos campos alimentan el bloque superior de la home.</p>
+          </div>
+          <label class="label inline-flex items-center gap-2 !mb-0">
+            <input type="checkbox" name="is_active" {% if hero_block.is_active %}checked{% endif %}>
+            Habilitado
+          </label>
+        </div>
+        <div><label class="label">Badge superior</label><input class="input" name="badge_text" value="{{ hero_config.get('badge_text', '') }}" placeholder="Territorio serrano y vida local"></div>
+        <div><label class="label">Horario visible</label><input class="input" name="opening_hours" value="{{ site.opening_hours or '' }}" placeholder="Lunes a viernes de 9:00 a 15:00"></div>
+        <div class="md:col-span-2"><label class="label">Antetítulo</label><input class="input" name="eyebrow" value="{{ hero_config.get('eyebrow', '') }}" placeholder="Lavalleja, Uruguay"></div>
+        <div class="md:col-span-2"><label class="label">Título principal</label><textarea class="input" rows="4" name="title" placeholder="Batlle y Ordóñez, entre sierras, producción y comunidad">{{ hero_block.title or '' }}</textarea></div>
+        <div class="md:col-span-2"><label class="label">Descripción</label><textarea class="input" rows="4" name="subtitle" placeholder="Servicios municipales, agenda local y noticias pensadas para una localidad del interior lavallejino.">{{ hero_block.subtitle or '' }}</textarea></div>
+      </div>
+
+      <div class="card grid md:grid-cols-2 gap-4">
+        <div class="md:col-span-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">Botones</div>
+        <div><label class="label">CTA principal</label><input class="input" name="cta_primary_label" value="{{ hero_config.get('cta_primary_label', '') }}" placeholder="Ver trámites"></div>
+        <div><label class="label">Enlace CTA principal</label><input class="input" name="cta_primary_href" value="{{ hero_config.get('cta_primary_href', '') }}" placeholder="/tramites"></div>
+        <div><label class="label">CTA secundario</label><input class="input" name="cta_secondary_label" value="{{ hero_config.get('cta_secondary_label', '') }}" placeholder="Conocer el concejo"></div>
+        <div><label class="label">Enlace CTA secundario</label><input class="input" name="cta_secondary_href" value="{{ hero_config.get('cta_secondary_href', '') }}" placeholder="/#concejo"></div>
+      </div>
+
+      <div class="card grid md:grid-cols-2 gap-4">
+        <div class="md:col-span-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">Panel lateral</div>
+        <div><label class="label">Etiqueta del panel</label><input class="input" name="news_panel_eyebrow" value="{{ hero_config.get('news_panel_eyebrow', '') }}" placeholder="Actualidad"></div>
+        <div><label class="label">Título del panel</label><input class="input" name="news_panel_title" value="{{ hero_config.get('news_panel_title', '') }}" placeholder="Lo último en Batlle y Ordóñez"></div>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="card">
+        <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Imagen principal</div>
+        <p class="text-xs text-slate-500 mt-1">La portada usa una imagen de la biblioteca de medios.</p>
+
+        <div id="home-hero-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-[4/5] flex items-center justify-center">
+          {% if site.hero %}
+          <img src="{{ site.hero.public_url }}" alt="Hero actual" class="h-full w-full object-cover">
+          {% else %}
+          <div class="px-6 text-center text-sm text-slate-400">Sin imagen seleccionada</div>
+          {% endif %}
+        </div>
+
+        <div class="mt-4">
+          <input type="hidden" id="home-hero-media-id" name="hero_media_id" value="{{ site.hero_media_id or '' }}">
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <button type="button" id="home-hero-picker-open" class="btn btn-secondary">Elegir imagen</button>
+            <button type="button" id="home-hero-picker-clear" class="btn btn-secondary">Quitar imagen</button>
+          </div>
+          <div id="home-hero-selection-label" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            {% if site.hero %}#{{ site.hero.id }} · {{ site.hero.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+          </div>
+          <p class="mt-2 text-xs text-slate-500">Subí una imagen en <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a> y luego elegila desde la galería.</p>
+        </div>
+      </div>
+
+      <div class="card text-sm text-slate-600 space-y-2">
+        <div class="font-semibold text-slate-700">Qué controla esta pantalla</div>
+        <p>Imagen de fondo del hero.</p>
+        <p>Badge, antetítulo, título y descripción principal.</p>
+        <p>Texto y enlaces de ambos botones.</p>
+        <p>Encabezado del panel lateral de novedades y horario visible.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <button class="btn btn-primary">Guardar hero</button>
+  </div>
+</form>
+
+<!-- ══ Modal: Hero ══════════════════════════════════════════════════════ -->
+<div id="home-hero-picker-modal" data-picker-modal style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(2,6,23,.6);padding:1rem;">
+  <div style="display:flex;flex-direction:column;width:100%;max-width:900px;max-height:90vh;background:#fff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div><div style="font-size:1.1rem;font-weight:600;color:#0f172a;">Seleccionar imagen hero</div><div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Filtrá por nombre y hacé clic en una imagen para elegirla.</div></div>
+      <button type="button" class="js-close-home-hero-picker" style="background:none;border:none;cursor:pointer;padding:.4rem;border-radius:.5rem;color:#94a3b8;" aria-label="Cerrar"><i data-lucide="x" style="width:1.2rem;height:1.2rem;display:block;"></i></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.9rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <input id="home-hero-picker-search" type="search" class="input" placeholder="Filtrar por nombre de archivo" style="flex:1;">
+      <button type="button" id="home-hero-picker-clear-selection" class="btn btn-secondary" style="white-space:nowrap;">Sin imagen</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div id="home-hero-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        {% if site.hero %}<img src="{{ site.hero.public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
+        <div id="home-hero-picker-current-name" style="font-size:.85rem;font-weight:500;color:#1e293b;margin-top:.15rem;">
+          {% if site.hero %}#{{ site.hero.id }} · {{ site.hero.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        {% for asset in media_assets %}
+        <div role="button" tabindex="0" class="js-home-hero-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+          <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
+        </div>
+        {% endfor %}
+        <div id="home-hero-picker-empty" style="display:none;grid-column:1/-1;padding:3rem 1rem;text-align:center;font-size:.875rem;color:#94a3b8;border:2px dashed #cbd5e1;border-radius:12px;">No hay imágenes que coincidan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const input      = document.getElementById('home-hero-media-id');
+  const label      = document.getElementById('home-hero-selection-label');
+  const preview    = document.getElementById('home-hero-preview-frame');
+  const openBtn    = document.getElementById('home-hero-picker-open');
+  const clearBtn   = document.getElementById('home-hero-picker-clear');
+  const modal      = document.getElementById('home-hero-picker-modal');
+  const search     = document.getElementById('home-hero-picker-search');
+  const clearSel   = document.getElementById('home-hero-picker-clear-selection');
+  const curName    = document.getElementById('home-hero-picker-current-name');
+  const curPrev    = document.getElementById('home-hero-picker-current-preview');
+  const closeBtns  = Array.from(document.querySelectorAll('.js-close-home-hero-picker'));
+  const options    = Array.from(document.querySelectorAll('.js-home-hero-option'));
+  const emptyState = document.getElementById('home-hero-picker-empty');
+
+  const assetMap = new Map(options.map(function (btn) {
+    return [btn.dataset.assetId, { id: btn.dataset.assetId, name: btn.dataset.assetName || '', url: btn.dataset.assetUrl || '' }];
+  }));
+
+  const render = function () {
+    const asset = assetMap.get(input.value || '');
+    options.forEach(function (btn) {
+      const sel = btn.dataset.assetId === (input.value || '');
+      btn.classList.toggle('picker-selected', sel);
+      btn.style.borderColor = sel ? '#3b82f6' : '#e2e8f0';
+      btn.style.boxShadow   = sel ? '0 0 0 3px rgba(59,130,246,.25)' : 'none';
+    });
+    if (!asset) {
+      label.textContent = 'Sin imagen seleccionada';
+      preview.innerHTML = '<div class="px-6 text-center text-sm text-slate-400">Sin imagen seleccionada</div>';
+      if (curName) curName.textContent = 'Sin imagen seleccionada';
+      if (curPrev) curPrev.innerHTML = '<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>';
+      return;
+    }
+    const text = '#' + asset.id + ' · ' + asset.name;
+    label.textContent = text;
+    preview.innerHTML = '<img src="' + asset.url + '" alt="Hero" class="h-full w-full object-cover">';
+    if (curName) curName.textContent = text;
+    if (curPrev) curPrev.innerHTML = '<img src="' + asset.url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">';
+  };
+
+  const open  = function () { modal.style.display = 'flex'; search.value = ''; search.focus(); filter(); };
+  const close = function () { modal.style.display = 'none'; };
+  const filter = function () {
+    const q = search.value.trim().toLowerCase(); let n = 0;
+    options.forEach(function (btn) { const ok = !q || (btn.dataset.search || '').includes(q); btn.style.display = ok ? '' : 'none'; if (ok) n++; });
+    emptyState.style.display = n > 0 ? 'none' : 'block';
+  };
+
+  options.forEach(function (btn) {
+    btn.addEventListener('click', function () { input.value = btn.dataset.assetId || ''; render(); close(); });
+    btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); } });
+  });
+  openBtn.addEventListener('click', open);
+  clearBtn.addEventListener('click', function () { input.value = ''; render(); });
+  clearSel.addEventListener('click', function () { input.value = ''; render(); close(); });
+  search.addEventListener('input', filter);
+  closeBtns.forEach(function (btn) { btn.addEventListener('click', close); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.style.display !== 'none') close();
+  });
+  render();
+  lucide.createIcons();
+})();
+</script>
+{% endblock %}

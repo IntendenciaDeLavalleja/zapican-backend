@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Auditoría{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-2">
+  <h1 class="text-2xl font-semibold">Auditoría</h1>
+  <form method="get" class="flex gap-2">
+    <select name="user_id" class="input" onchange="this.form.submit()"><option value="">— Usuario —</option>{% for u in users %}<option value="{{ u.id }}" {% if request.args.get('user_id')|string==u.id|string %}selected{% endif %}>{{ u.username }}</option>{% endfor %}</select>
+    
+    <input class="input" name="entity_type" placeholder="entity_type" value="{{ request.args.get('entity_type','') }}">
+    <button class="btn btn-secondary">Filtrar</button>
+  </form>
+</div>
+<div class="card overflow-x-auto">
+  <table class="table">
+    <thead><tr><th>Cuándo</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>IP</th><th>Detalle</th></tr></thead>
+    <tbody>
+      {% for l in logs %}
+      <tr>
+        <td class="text-xs">{{ l.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td class="text-xs">{{ l.user.username if l.user else 'sistema' }}</td>
+        <td><code class="text-xs">{{ l.action }}</code></td>
+        <td class="text-xs">{{ l.entity_type or '' }}{% if l.entity_id %}#{{ l.entity_id }}{% endif %}</td>
+        <td class="text-xs text-slate-500">{{ l.ip_address or '' }}</td>
+        <td class="text-xs text-slate-600 max-w-md truncate" title="{{ l.details or '' }}">{{ l.details or '' }}</td>
+      </tr>
+      {% else %}<tr><td colspan="6" class="text-center text-slate-400 py-8">Sin registros.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

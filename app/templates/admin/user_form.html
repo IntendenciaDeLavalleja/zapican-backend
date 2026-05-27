@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if user else 'Nuevo' }} usuario{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if user else 'Nuevo' }} usuario admin</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.users_list') }}">← Volver</a>
+</div>
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div><label class="label">Username *</label><input class="input" name="username" required value="{{ user.username if user else '' }}"></div>
+    <div><label class="label">Email *</label><input class="input" type="email" name="email" required value="{{ user.email if user else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Nombre completo</label><input class="input" name="full_name" value="{{ user.full_name if user else '' }}"></div>
+    <div><label class="label">Contraseña {% if user %}(opcional){% else %}*{% endif %}</label><input class="input" type="password" name="password" {% if not user %}required minlength="8"{% endif %}></div>
+    <div></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_superuser" {% if user and user.is_superuser %}checked{% endif %}> Superuser</label></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_active" {% if not user or user.is_active %}checked{% endif %}> Activo</label></div>
+  </div>
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+{% endblock %}

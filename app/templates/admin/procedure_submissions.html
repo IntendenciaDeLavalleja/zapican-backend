@@ -1,0 +1,98 @@
+{% extends "admin/base.html" %}
+{% block title %}Solicitudes de Trámites{% endblock %}
+
+{% macro status_label(st) %}
+  {%- if st == 'new' %}Nuevo
+  {%- elif st == 'in_review' %}En revisión
+  {%- elif st == 'needs_info' %}Requiere información
+  {%- elif st == 'approved' %}Aprobado
+  {%- elif st == 'rejected' %}Rechazado
+  {%- elif st == 'completed' %}Completado
+  {%- elif st == 'archived' %}Archivado
+  {%- else %}{{ st }}
+  {%- endif %}
+{% endmacro %}
+
+{% macro status_cls(st) %}
+  {%- if st == 'new' %}bg-amber-100 text-amber-700
+  {%- elif st == 'in_review' %}bg-blue-100 text-blue-700
+  {%- elif st == 'needs_info' %}bg-orange-100 text-orange-700
+  {%- elif st == 'approved' %}bg-green-100 text-green-700
+  {%- elif st == 'rejected' %}bg-red-100 text-red-700
+  {%- elif st == 'completed' %}bg-emerald-100 text-emerald-700
+  {%- elif st == 'archived' %}bg-slate-100 text-slate-500
+  {%- else %}bg-slate-100 text-slate-600
+  {%- endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Solicitudes de Trámites</h1>
+    <p class="text-sm text-slate-500 mt-1">Documentación enviada por ciudadanos desde el sitio web.</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('admin.procedures_list') }}">&#8592; Trámites</a>
+</div>
+
+<!-- Filtros -->
+<form method="get" class="card mb-5 grid md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+  <div>
+    <label class="label">Estado</label>
+    <select class="input" name="status">
+      <option value="">Todos los estados</option>
+      {% for st in statuses %}
+      <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ status_label(st) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="label">Tipo de trámite</label>
+    <select class="input" name="procedure_id">
+      <option value="">Todos los trámites</option>
+      {% for item in procedure_types %}
+      <option value="{{ item.id }}" {% if selected_type == item.id %}selected{% endif %}>{{ item.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div><button class="btn btn-primary w-full justify-center">Filtrar</button></div>
+</form>
+
+<!-- Lista de solicitudes -->
+<div class="space-y-2">
+  {% for s in submissions %}
+  <a href="{{ url_for('admin.procedure_submission_detail', submission_id=s.id) }}"
+     class="flex items-start gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4 hover:border-blue-300 hover:shadow-sm transition-all group{% if s.status == 'new' %} border-l-4 border-l-amber-400{% endif %}">
+    <!-- Icono trámite -->
+    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-50">
+      <i data-lucide="file-text" class="w-5 h-5 text-slate-500 group-hover:text-blue-600"></i>
+    </div>
+    <!-- Info principal -->
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="font-semibold text-slate-900 truncate{% if s.status == 'new' %} text-amber-800{% endif %}">
+          {{ s.procedure_type.title }}
+        </span>
+        <span class="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">{{ s.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+      </div>
+      <div class="text-sm text-slate-600 truncate mt-0.5">{{ s.applicant_name }} &middot; {{ s.applicant_email }}</div>
+      <div class="flex items-center gap-3 mt-1.5">
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ status_cls(s.status) }}">{{ status_label(s.status) }}</span>
+        {% if s.attachments_json %}
+        <span class="text-xs text-slate-400 flex items-center gap-1">
+          <i data-lucide="paperclip" class="w-3 h-3"></i> {{ s.attachments_json | length }} adjunto{{ 's' if s.attachments_json | length != 1 else '' }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+    {% if s.status == 'new' %}
+    <div class="flex-shrink-0 mt-2 w-2 h-2 rounded-full bg-amber-400"></div>
+    {% endif %}
+  </a>
+  {% else %}
+  <div class="card text-center text-slate-400 py-12">
+    <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 opacity-30"></i>
+    <p>No hay solicitudes todavía.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

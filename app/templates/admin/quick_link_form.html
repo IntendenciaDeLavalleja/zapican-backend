@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %}
+{% block title %}Editar acceso rápido{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-8 gap-2 flex-wrap">
+  <div>
+    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 mb-1">Accesos Rápidos / posición #{{ index + 1 }}</p>
+    <h1 class="text-2xl font-bold text-slate-900">Editar acceso rápido</h1>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('admin.quick_links_list') }}">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver
+  </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+
+  <!-- ── Form (3 cols) ──────────────────────────────────────── -->
+  <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+    <form method="post" class="space-y-6" id="edit-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="icon" id="icon-value" value="{{ link.icon or 'file-text' }}">
+
+      <!-- Icon picker -->
+      <div>
+        <label class="label">Ícono</label>
+        <div class="grid grid-cols-9 gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-200" id="icon-picker"></div>
+        <p class="text-xs text-slate-400 mt-1.5">Seleccioná el ícono que mejor represente este acceso.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label">Etiqueta <span class="text-rose-500">*</span></label>
+          <input type="text" name="label" id="f-label" class="input" value="{{ link.label }}" required
+                 oninput="syncPreview()">
+        </div>
+        <div>
+          <label class="label">URL <span class="text-rose-500">*</span></label>
+          <input type="text" name="url" id="f-url" class="input" value="{{ link.url }}" required
+                 oninput="syncPreview()">
+          <p class="text-xs text-slate-400 mt-1">Ruta relativa (<code class="bg-slate-100 px-1 rounded">/tramites</code>) o URL completa.</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Descripción</label>
+        <input type="text" name="description" id="f-desc" class="input" value="{{ link.description }}"
+               oninput="syncPreview()">
+        <p class="text-xs text-slate-400 mt-1">Texto breve que aparece debajo de la etiqueta.</p>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="w-4 h-4"></i> Guardar cambios
+        </button>
+        <a href="{{ url_for('admin.quick_links_list') }}" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Preview (2 cols) ───────────────────────────────────── -->
+  <div class="lg:col-span-2">
+    <div class="sticky top-6 space-y-4">
+      <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
+        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Vista previa en tiempo real
+      </p>
+
+      <!-- Full panel preview -->
+      <div class="rounded-3xl bg-slate-100 border border-slate-200 shadow-lg overflow-hidden p-3">
+        <div class="h-2 rounded-t-xl mb-3" style="background: linear-gradient(90deg,#0d3b66,#1d7874,#0ea5e9)"></div>
+        <div class="bg-white/90 rounded-2xl p-4 shadow-inner">
+          <p class="text-[0.6rem] font-bold uppercase tracking-[0.35em] text-slate-400 mb-3">Accesos Rápidos</p>
+          <div class="space-y-2">
+            <!-- This card highlighted -->
+            <div id="preview-card"
+                 class="flex items-center gap-2.5 rounded-[0.9rem] bg-gradient-to-b from-white to-slate-50 px-3 py-2.5 shadow-md ring-2 ring-blue-400/40">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#0d3b66] to-[#1d7874] text-white shadow-sm">
+                <i data-lucide="{{ link.icon or 'file-text' }}" id="preview-icon" class="w-3.5 h-3.5"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[0.72rem] font-semibold text-slate-900 truncate" id="preview-label">{{ link.label }}</p>
+                <p class="text-[0.62rem] text-slate-400 truncate" id="preview-desc">{{ link.description }}</p>
+              </div>
+              <svg class="w-3 h-3 text-slate-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+            </div>
+            <!-- Ghost sibling cards -->
+            <div class="flex items-center gap-2.5 rounded-[0.9rem] bg-gradient-to-b from-white to-slate-50 px-3 py-2.5 ring-1 ring-slate-200/60 opacity-35">
+              <div class="flex h-8 w-8 shrink-0 rounded-lg bg-slate-200"></div>
+              <div class="flex-1 space-y-1">
+                <div class="h-2 w-20 bg-slate-200 rounded"></div>
+                <div class="h-1.5 w-28 bg-slate-100 rounded"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5 rounded-[0.9rem] bg-gradient-to-b from-white to-slate-50 px-3 py-2.5 ring-1 ring-slate-200/60 opacity-20">
+              <div class="flex h-8 w-8 shrink-0 rounded-lg bg-slate-200"></div>
+              <div class="flex-1 space-y-1">
+                <div class="h-2 w-16 bg-slate-200 rounded"></div>
+                <div class="h-1.5 w-24 bg-slate-100 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL display -->
+      <div class="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 flex items-center gap-2">
+        <i data-lucide="link" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+        <span class="text-xs font-mono text-slate-600 truncate" id="preview-url">{{ link.url }}</span>
+      </div>
+
+      <p class="text-[0.68rem] text-slate-400 flex items-center gap-1">
+        <i data-lucide="info" class="w-3 h-3"></i> El acceso resaltado es el que estás editando.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const AVAILABLE_ICONS = [
+  'file-text','users-2','calendar-days','map-pin','building-2',
+  'phone','mail','megaphone','truck','heart-pulse',
+  'star','home','clipboard-list','flag','briefcase',
+  'trees','landmark','shield-check',
+];
+
+let currentIcon = '{{ link.icon or "file-text" }}';
+
+function renderIconPicker() {
+  const el = document.getElementById('icon-picker');
+  if (!el) return;
+  el.innerHTML = '';
+  AVAILABLE_ICONS.forEach(name => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.title = name;
+    const active = name === currentIcon;
+    btn.className = [
+      'w-9 h-9 rounded-xl border-2 flex items-center justify-center transition-all',
+      active
+        ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-200'
+        : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50',
+    ].join(' ');
+    btn.innerHTML = `<i data-lucide="${name}" class="w-4 h-4 ${active ? 'text-blue-600' : 'text-slate-500'}"></i>`;
+    btn.addEventListener('click', () => {
+      currentIcon = name;
+      document.getElementById('icon-value').value = name;
+      renderIconPicker();
+      // Update preview icon
+      const pi = document.getElementById('preview-icon');
+      if (pi) { pi.setAttribute('data-lucide', name); lucide.createIcons(); }
+    });
+    el.appendChild(btn);
+  });
+  lucide.createIcons();
+}
+
+function syncPreview() {
+  const lbl = document.getElementById('f-label')?.value || '';
+  const desc = document.getElementById('f-desc')?.value || '';
+  const url = document.getElementById('f-url')?.value || '';
+  const pl = document.getElementById('preview-label');
+  const pd = document.getElementById('preview-desc');
+  const pu = document.getElementById('preview-url');
+  if (pl) pl.textContent = lbl || 'Sin título';
+  if (pd) pd.textContent = desc || '';
+  if (pu) pu.textContent = url || '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderIconPicker();
+  lucide.createIcons();
+});
+</script>
+{% endblock %}

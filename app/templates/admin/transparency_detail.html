@@ -1,0 +1,121 @@
+{% extends "admin/base.html" %}
+{% block title %}Solicitud {{ tr.reference_number }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <h1 class="text-2xl font-semibold">Solicitud {{ tr.reference_number }}</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.transparency_list') }}">&#8592; Solicitudes</a>
+</div>
+
+<div class="grid md:grid-cols-[minmax(0,1fr)_300px] gap-6">
+  <!-- Contenido principal -->
+  <div class="space-y-5">
+    <div class="card">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Información solicitada</p>
+      <div class="whitespace-pre-wrap text-slate-800 leading-relaxed">{{ tr.requested_information }}</div>
+    </div>
+    {% if tr.additional_location_data %}
+    <div class="card">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Datos adicionales para ubicar la información</p>
+      <div class="whitespace-pre-wrap text-slate-700 leading-relaxed">{{ tr.additional_location_data }}</div>
+    </div>
+    {% endif %}
+    <!-- Actualizar estado y notas internas -->
+    <div class="card">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">Gestión interna</p>
+      <form method="post" action="{{ url_for('admin.transparency_set_status', req_id=tr.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="space-y-4">
+          <div>
+            <label class="label">Estado</label>
+            <select name="status" class="input">
+              {% for key, label in status_labels.items() %}
+              <option value="{{ key }}" {% if tr.status == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="label">Notas internas (no visibles al solicitante)</label>
+            <textarea name="internal_notes" rows="4" class="input">{{ tr.internal_notes or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save" class="w-4 h-4"></i> Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Panel lateral -->
+  <div class="space-y-4">
+    <div class="card">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">Datos del solicitante</p>
+      <div class="space-y-3">
+        <div>
+          <p class="text-xs text-slate-400">Tipo de solicitante</p>
+          <p class="text-sm font-medium text-slate-900">{{ tr.requester_type }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Nombre / Razón social</p>
+          <p class="text-sm font-medium text-slate-900">{{ tr.full_name }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Documento / RUT</p>
+          <p class="text-sm text-slate-700">{{ tr.identifier }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Domicilio</p>
+          <p class="text-sm text-slate-700">{{ tr.address }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Correo electrónico</p>
+          <a href="mailto:{{ tr.email }}" class="text-sm font-medium text-blue-600 hover:underline">{{ tr.email }}</a>
+        </div>
+        {% if tr.phone %}
+        <div>
+          <p class="text-xs text-slate-400">Teléfono</p>
+          <a href="tel:{{ tr.phone }}" class="text-sm text-slate-700">{{ tr.phone }}</a>
+        </div>
+        {% endif %}
+        <div>
+          <p class="text-xs text-slate-400">Forma de respuesta preferida</p>
+          <p class="text-sm text-slate-700">{{ tr.preferred_response_channel }}</p>
+        </div>
+        {% if tr.preferred_format %}
+        <div>
+          <p class="text-xs text-slate-400">Formato preferido</p>
+          <p class="text-sm text-slate-700">{{ tr.preferred_format }}</p>
+        </div>
+        {% endif %}
+        <div>
+          <p class="text-xs text-slate-400">Municipio referido</p>
+          <p class="text-sm text-slate-700">{{ tr.municipality }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Recibida</p>
+          <p class="text-sm text-slate-700">{{ tr.created_at.strftime('%d/%m/%Y a las %H:%M') }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Estado actual</p>
+          {% set s = tr.status %}
+          <span class="badge {% if s == 'new' %}bg-blue-100 text-blue-700{% elif s == 'in_review' %}bg-amber-100 text-amber-700{% elif s == 'answered' %}bg-green-100 text-green-700{% else %}bg-slate-100 text-slate-500{% endif %}">
+            {{ status_labels.get(s, s) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <a href="mailto:{{ tr.email }}?subject=Re: Solicitud de información pública {{ tr.reference_number }}"
+       class="btn btn-primary w-full justify-center">
+      <i data-lucide="mail" class="w-4 h-4"></i> Responder por correo
+    </a>
+
+    <form method="post" action="{{ url_for('admin.transparency_delete', req_id=tr.id) }}"
+          onsubmit="return confirm('¿Eliminar esta solicitud? Esta acción no se puede deshacer.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger w-full justify-center">
+        <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar solicitud
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

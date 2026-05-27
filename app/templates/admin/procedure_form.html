@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if procedure else 'Nuevo' }} trámite{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-3">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if procedure else 'Nuevo' }} trámite</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.procedures_list') }}">← Trámites</a>
+</div>
+
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div><label class="label">Título</label><input class="input" name="title" value="{{ procedure.title if procedure else '' }}" required></div>
+    <div><label class="label">Slug</label><input class="input" name="slug" value="{{ procedure.slug if procedure else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Resumen</label><textarea class="input" rows="3" name="summary">{{ procedure.summary if procedure else '' }}</textarea></div>
+    <div><label class="label">Tiempo estimado (días)</label><input class="input" type="number" min="0" name="estimated_days" value="{{ procedure.estimated_days if procedure and procedure.estimated_days is not none else '' }}"></div>
+    <div><label class="label">Costo / tasa</label><input class="input" name="fee_text" value="{{ procedure.fee_text if procedure else '' }}" placeholder="Ej. Sin costo / 2 UR"></div>
+    <div><label class="label">Orden</label><input class="input" type="number" name="order_index" value="{{ procedure.order_index if procedure else 0 }}"></div>
+    <div class="flex gap-4 items-center pt-7">
+      <label class="label inline-flex items-center gap-2 mb-0"><input type="checkbox" name="is_active" {% if not procedure or procedure.is_active %}checked{% endif %}> Activo</label>
+      <label class="label inline-flex items-center gap-2 mb-0"><input type="checkbox" name="is_featured" {% if procedure and procedure.is_featured %}checked{% endif %}> Destacado</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="label">Cómo presentar el trámite</label>
+    <textarea class="input font-mono text-sm" rows="8" name="description_html" placeholder="Podés usar HTML simple para describir el proceso.">{{ procedure.description_html if procedure else '' }}</textarea>
+  </div>
+
+  <div class="card">
+    <label class="label">Requisitos y observaciones</label>
+    <textarea class="input" rows="5" name="eligibility_notes">{{ procedure.eligibility_notes if procedure else '' }}</textarea>
+  </div>
+
+  <div class="card">
+    <label class="label">Documentación requerida</label>
+    <textarea class="input" rows="6" name="required_documents" placeholder="Un documento por línea.&#10;Carné de salud&#10;Libreta de conducir&#10;Certificado único departamental">{{ procedure.required_documents | join('\n') if procedure else '' }}</textarea>
+    <p class="text-xs text-slate-500 mt-2">Cada línea se convierte en un campo de adjunto obligatorio dentro del formulario público.</p>
+  </div>
+
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+{% endblock %}

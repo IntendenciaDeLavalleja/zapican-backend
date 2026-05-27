@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if form else 'Nuevo' }} formulario{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if form else 'Nuevo' }} formulario</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.forms_list') }}">← Volver</a>
+</div>
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div><label class="label">Título *</label><input class="input" name="title" required value="{{ form.title if form else '' }}"></div>
+    <div><label class="label">Slug</label><input class="input" name="slug" value="{{ form.slug if form else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Descripción</label><input class="input" name="description" value="{{ form.description if form else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Emails de notificación</label><input class="input" name="notify_emails" value="{{ form.notify_emails if form else '' }}"></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_active" {% if not form or form.is_active %}checked{% endif %}> Activo</label></div>
+  </div>
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+
+{% if form %}
+<div class="card mt-6">
+  <div class="mb-4">
+    <h2 class="text-lg font-semibold">Campos del formulario</h2>
+    <p class="text-sm text-slate-500">Puedes crear, editar y borrar cada campo desde aquí.</p>
+  </div>
+  {% if editing_field %}
+  <form method="post" action="{{ url_for('admin.field_edit', field_id=editing_field.id) }}" class="grid md:grid-cols-2 gap-4 mb-6 p-4 rounded-lg bg-slate-50 border border-slate-200">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="label">Nombre interno *</label><input class="input" name="name" required value="{{ editing_field.name }}"></div>
+    <div><label class="label">Etiqueta *</label><input class="input" name="label" required value="{{ editing_field.label }}"></div>
+    <div><label class="label">Tipo</label><select class="input" name="field_type">{% for field_type in field_types %}<option value="{{ field_type }}" {% if editing_field.field_type == field_type %}selected{% endif %}>{{ field_type }}</option>{% endfor %}</select></div>
+    <div><label class="label">Orden</label><input class="input" type="number" name="order_index" value="{{ editing_field.order_index }}"></div>
+    <div class="md:col-span-2"><label class="label">Opciones</label><input class="input" name="options" placeholder="opción 1, opción 2" value="{{ editing_field.options or '' }}"></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_required" {% if editing_field.is_required %}checked{% endif %}> Obligatorio</label></div>
+    <div class="flex items-end justify-end gap-2"><a class="btn btn-secondary" href="{{ url_for('admin.form_edit', form_id=form.id) }}">Cancelar</a><button class="btn btn-primary">Actualizar campo</button></div>
+  </form>
+  {% else %}
+  <form method="post" action="{{ url_for('admin.field_create', form_id=form.id) }}" class="grid md:grid-cols-2 gap-4 mb-6 p-4 rounded-lg bg-slate-50 border border-slate-200">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="label">Nombre interno *</label><input class="input" name="name" required></div>
+    <div><label class="label">Etiqueta *</label><input class="input" name="label" required></div>
+    <div><label class="label">Tipo</label><select class="input" name="field_type">{% for field_type in field_types %}<option value="{{ field_type }}">{{ field_type }}</option>{% endfor %}</select></div>
+    <div><label class="label">Orden</label><input class="input" type="number" name="order_index" value="0"></div>
+    <div class="md:col-span-2"><label class="label">Opciones</label><input class="input" name="options" placeholder="opción 1, opción 2"></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_required"> Obligatorio</label></div>
+    <div class="flex items-end justify-end"><button class="btn btn-primary">Añadir campo</button></div>
+  </form>
+  {% endif %}
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead><tr><th>Orden</th><th>Nombre</th><th>Etiqueta</th><th>Tipo</th><th>Obligatorio</th><th></th></tr></thead>
+      <tbody>
+        {% for field in form.fields %}
+        <tr>
+          <td>{{ field.order_index }}</td>
+          <td><code class="text-xs">{{ field.name }}</code></td>
+          <td>{{ field.label }}</td>
+          <td>{{ field.field_type }}</td>
+          <td>{{ '✓' if field.is_required else '' }}</td>
+          <td class="text-right"><div class="flex items-center justify-end gap-2"><a class="btn btn-secondary" href="{{ url_for('admin.field_edit', field_id=field.id) }}">Editar</a><form method="post" action="{{ url_for('admin.field_delete', field_id=field.id) }}" onsubmit="return confirm('Eliminar campo?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger">×</button></form></div></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-slate-400 py-8">Sin campos todavía.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

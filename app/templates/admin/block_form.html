@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block title %}Bloque · {{ block.block_type }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">Bloque · <code class="text-base">{{ block.block_type }}</code></h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.blocks_list', page_type=block.page_type) }}">← Bloques</a>
+</div>
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div><label class="label">Título</label><input class="input" name="title" value="{{ block.title or '' }}"></div>
+    <div><label class="label">Subtítulo</label><input class="input" name="subtitle" value="{{ block.subtitle or '' }}"></div>
+    <div><label class="label">Orden</label><input class="input" type="number" name="order_index" value="{{ block.order_index }}"></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="is_active" {% if block.is_active %}checked{% endif %}> Habilitado</label></div>
+  </div>
+  <div class="card">
+    <label class="label">Contenido HTML</label>
+    <textarea class="input font-mono text-xs" rows="6" name="content_html">{{ block.content_html or '' }}</textarea>
+  </div>
+  <div class="card">
+    <label class="label">Configuración (JSON)</label>
+    <textarea class="input font-mono text-xs" rows="10" name="config_json">{{ block.config_json | tojson(indent=2) if block.config_json else '{}' }}</textarea>
+    <p class="text-xs text-slate-500 mt-1">Estructura libre según el tipo de bloque (ej. items, links, lat/lng).</p>
+  </div>
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+{% endblock %}

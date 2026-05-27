@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es"><body style="font-family:system-ui,sans-serif;padding:24px;">
+  <h2 style="color:#1f3a2c;">Nueva respuesta de formulario</h2>
+  <p><strong>Formulario:</strong> {{ form_title }}</p>
+  <p><strong>Municipio:</strong> {{ municipality_name }}</p>
+  <table style="border-collapse:collapse;margin-top:12px;">
+    {% for k, v in data.items() %}
+    <tr>
+      <td style="padding:6px 12px;border:1px solid #eee;font-weight:600;">{{ k }}</td>
+      <td style="padding:6px 12px;border:1px solid #eee;">{{ v }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body></html>

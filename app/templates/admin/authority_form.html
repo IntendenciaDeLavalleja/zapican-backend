@@ -1,0 +1,239 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if authority else 'Nueva' }} autoridad{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if authority else 'Nueva' }} autoridad</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.authorities_list') }}">← Volver</a>
+</div>
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="photo_media_id" name="photo_media_id" value="{{ authority.photo_media_id if authority and authority.photo_media_id else '' }}">
+  
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div><label class="label">Nombre *</label><input class="input" name="name" required value="{{ authority.name if authority else '' }}"></div>
+    <div><label class="label">Cargo *</label><input class="input" name="role" required value="{{ authority.role if authority else '' }}"></div>
+    <div><label class="label">Email</label><input class="input" type="email" name="email" value="{{ authority.email if authority else '' }}"></div>
+    <div><label class="label">Teléfono</label><input class="input" name="phone" value="{{ authority.phone if authority else '' }}"></div>
+    <div><label class="label">Facebook</label><input class="input" name="facebook_url" value="{{ authority.facebook_url if authority else '' }}"></div>
+    <div><label class="label">LinkedIn</label><input class="input" name="linkedin_url" value="{{ authority.linkedin_url if authority else '' }}"></div>
+    <div><label class="label">X / Twitter</label><input class="input" name="twitter_url" value="{{ authority.twitter_url if authority else '' }}"></div>
+    <div>
+      <label class="label">Foto</label>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <button type="button" id="authority-photo-picker-open" class="btn btn-secondary">Elegir imagen</button>
+        <button type="button" id="authority-photo-picker-clear" class="btn btn-secondary">Quitar imagen</button>
+      </div>
+      <div id="authority-photo-selection-label" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+        {% if authority and authority.photo %}
+        #{{ authority.photo.id }} · {{ authority.photo.original_filename }}
+        {% else %}
+        Sin imagen seleccionada
+        {% endif %}
+      </div>
+      <p class="mt-2 text-xs text-slate-500">Elegí una imagen de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a> desde la galería.</p>
+    </div>
+    <div><label class="label">Orden</label><input class="input" type="number" name="order_index" value="{{ authority.order_index if authority else 0 }}"></div>
+    <div class="md:col-span-2">
+      <label class="label">Vista previa</label>
+      <div id="authority-photo-preview-frame" class="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-[4/3] flex items-center justify-center">
+        {% if authority and authority.photo %}
+        <img id="authority-photo-preview" src="{{ authority.photo.public_url }}" alt="Foto actual" class="h-full w-full object-cover">
+        {% else %}
+        <div id="authority-photo-preview" class="px-6 text-center text-sm text-slate-400">Sin imagen seleccionada</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="md:col-span-2"><label class="label">Bio</label><textarea class="input" rows="4" name="bio">{{ authority.bio if authority else '' }}</textarea></div>
+  </div>
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+
+<!-- Image picker modal -->
+<div id="authority-photo-picker-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(2,6,23,.6);padding:1rem;">
+  <div style="display:flex;flex-direction:column;width:100%;max-width:900px;max-height:90vh;background:#fff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:600;color:#0f172a;">Seleccionar imagen</div>
+        <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Filtrá por nombre y hacé clic en una imagen para elegirla.</div>
+      </div>
+      <button type="button" class="js-close-authority-photo-picker" style="background:none;border:none;cursor:pointer;padding:.4rem;border-radius:.5rem;color:#94a3b8;" aria-label="Cerrar">
+        <i data-lucide="x" style="width:1.2rem;height:1.2rem;display:block;"></i>
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.9rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <input id="authority-photo-picker-search" type="search" class="input" placeholder="Filtrar por nombre de archivo" style="flex:1;">
+      <button type="button" id="authority-photo-picker-clear-selection" class="btn btn-secondary" style="white-space:nowrap;">Usar sin imagen</button>
+    </div>
+
+    <!-- Selección actual + preview compacto -->
+    <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div id="authority-photo-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        {% if authority and authority.photo %}
+        <img src="{{ authority.photo.public_url }}" alt="Selección actual" style="width:100%;height:100%;object-fit:cover;">
+        {% else %}
+        <span style="font-size:.6rem;color:#94a3b8;text-align:center;padding:.2rem;">—</span>
+        {% endif %}
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
+        <div id="authority-photo-picker-current-name" style="font-size:.85rem;font-weight:500;color:#1e293b;margin-top:.15rem;">
+          {% if authority and authority.photo %}#{{ authority.photo.id }} · {{ authority.photo.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid scrollable — min-height:0 es la clave para que el scroll funcione en un flex column -->
+    <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
+      <div id="authority-photo-picker-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        {% for asset in media_assets %}
+        <div
+          role="button"
+          tabindex="0"
+          class="js-authority-photo-option"
+          data-asset-id="{{ asset.id }}"
+          data-asset-name="{{ asset.original_filename|e }}"
+          data-asset-url="{{ asset.public_url|e }}"
+          data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}"
+          style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;"
+          onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';"
+          onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}"
+        >
+          <div style="width:100%;height:160px;overflow:hidden;background:#f1f5f9;">
+            <img
+              src="{{ asset.public_url }}"
+              alt="{{ asset.original_filename }}"
+              loading="lazy"
+              decoding="async"
+              style="width:100%;height:100%;object-fit:cover;display:block;"
+            >
+          </div>
+          <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div>
+            <div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        <div id="authority-photo-picker-empty" style="display:none;grid-column:1/-1;padding:3rem 1rem;text-align:center;font-size:.875rem;color:#94a3b8;border:2px dashed #cbd5e1;border-radius:12px;">
+          No hay imágenes que coincidan con el filtro.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    const input = document.getElementById('photo_media_id');
+    const selectionLabel = document.getElementById('authority-photo-selection-label');
+    const previewFrame = document.getElementById('authority-photo-preview-frame');
+    const openButton = document.getElementById('authority-photo-picker-open');
+    const clearButton = document.getElementById('authority-photo-picker-clear');
+    const modal = document.getElementById('authority-photo-picker-modal');
+    const modalSearch = document.getElementById('authority-photo-picker-search');
+    const modalClearSelection = document.getElementById('authority-photo-picker-clear-selection');
+    const modalCurrentName = document.getElementById('authority-photo-picker-current-name');
+    const modalCurrentPreview = document.getElementById('authority-photo-picker-current-preview');
+    const closeButtons = document.querySelectorAll('.js-close-authority-photo-picker');
+    const optionButtons = Array.from(document.querySelectorAll('.js-authority-photo-option'));
+    const emptyState = document.getElementById('authority-photo-picker-empty');
+    if (!input || !selectionLabel || !previewFrame || !openButton || !clearButton || !modal || !modalSearch || !modalClearSelection || !modalCurrentName || !modalCurrentPreview) return;
+
+    const assetMap = new Map(optionButtons.map((btn) => [btn.dataset.assetId, {
+      id: btn.dataset.assetId,
+      name: btn.dataset.assetName || '',
+      url: btn.dataset.assetUrl || ''
+    }]));
+
+    const renderSelection = () => {
+      const asset = assetMap.get(input.value || '');
+
+      optionButtons.forEach((btn) => {
+        const sel = btn.dataset.assetId === (input.value || '');
+        btn.classList.toggle('picker-selected', sel);
+        btn.style.borderColor = sel ? '#3b82f6' : '#e2e8f0';
+        btn.style.boxShadow = sel ? '0 0 0 3px rgba(59,130,246,.25)' : 'none';
+      });
+
+      if (!asset) {
+        selectionLabel.textContent = 'Sin imagen seleccionada';
+        previewFrame.innerHTML = '<div id="authority-photo-preview" style="color:#94a3b8;font-size:.85rem;text-align:center;">Sin imagen seleccionada</div>';
+        if (modalCurrentName) modalCurrentName.textContent = 'Sin imagen seleccionada';
+        if (modalCurrentPreview) modalCurrentPreview.innerHTML = '<span style="font-size:.6rem;color:#94a3b8;text-align:center;padding:.2rem;">—</span>';
+        return;
+      }
+
+      selectionLabel.textContent = '#' + asset.id + ' · ' + asset.name;
+      previewFrame.innerHTML = '<img id="authority-photo-preview" src="' + asset.url + '" alt="Foto seleccionada" style="width:100%;height:100%;object-fit:cover;display:block;">';
+      if (modalCurrentName) modalCurrentName.textContent = '#' + asset.id + ' · ' + asset.name;
+      if (modalCurrentPreview) modalCurrentPreview.innerHTML = '<img src="' + asset.url + '" alt="Selección" style="width:100%;height:100%;object-fit:cover;display:block;">';
+    };
+
+    const openModal = () => {
+      modal.style.display = 'flex';
+      modalSearch.value = '';
+      modalSearch.focus();
+      filterOptions();
+    };
+
+    const closeModal = () => {
+      modal.style.display = 'none';
+    };
+
+    const filterOptions = () => {
+      const query = modalSearch.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      optionButtons.forEach((btn) => {
+        const matches = !query || (btn.dataset.search || '').includes(query);
+        btn.style.display = matches ? '' : 'none';
+        if (matches) visibleCount += 1;
+      });
+
+      emptyState.style.display = visibleCount > 0 ? 'none' : 'block';
+    };
+
+    optionButtons.forEach((btn) => {
+      btn.addEventListener('click', function () {
+        input.value = btn.dataset.assetId || '';
+        renderSelection();
+        closeModal();
+      });
+      btn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+      });
+    });
+
+    openButton.addEventListener('click', openModal);
+    clearButton.addEventListener('click', function () {
+      input.value = '';
+      renderSelection();
+    });
+    modalClearSelection.addEventListener('click', function () {
+      input.value = '';
+      renderSelection();
+      closeModal();
+    });
+    modalSearch.addEventListener('input', filterOptions);
+    closeButtons.forEach((btn) => {
+      btn.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal.style.display !== 'none' && modal.style.display !== '') {
+        closeModal();
+      }
+    });
+
+    renderSelection();
+  })();
+</script>
+{% endblock %}

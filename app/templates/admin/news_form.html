@@ -1,0 +1,259 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if post else 'Nuevo' }} comunicado{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if post else 'Nuevo' }} comunicado</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.news_list') }}">← Volver</a>
+</div>
+
+<form method="post" class="space-y-5">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="news-cover-media-id" name="cover_media_id" value="{{ post.cover_media_id if post and post.cover_media_id else '' }}">
+  <input type="hidden" id="news-og-media-id" name="og_media_id" value="{{ post.og_media_id if post and post.og_media_id else '' }}">
+
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div class="md:col-span-2">
+      <label class="label">Título *</label>
+      <input class="input" name="title" required value="{{ post.title if post else '' }}">
+    </div>
+    <div>
+      <label class="label">Slug</label>
+      <input class="input" name="slug" value="{{ post.slug if post else '' }}" placeholder="mantenimiento-camineria-rural-batlle-ordonez">
+      <p class="mt-1 text-xs text-slate-500">Opcional. Si lo dejas vacío se genera desde el título.</p>
+    </div>
+    <div>
+      <label class="label">Categoría</label>
+      <select class="input" name="category_id">
+        <option value="">—</option>
+        {% for c in categories %}<option value="{{ c.id }}" {% if post and post.category_id==c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="md:col-span-2">
+      <label class="label">Resumen</label>
+      <textarea class="input" name="excerpt" rows="2">{{ post.excerpt if post else '' }}</textarea>
+    </div>
+    <div class="md:col-span-2">
+      <label class="label">Contenido HTML</label>
+      <textarea class="input font-mono text-xs" name="content_html" rows="14">{{ post.content_html if post else '' }}</textarea>
+    </div>
+    <div>
+      <label class="label">Estado</label>
+      <select class="input" name="status">
+        {% for s in statuses %}<option value="{{ s }}" {% if post and post.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="flex items-center mt-6">
+      <label class="label inline-flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="is_featured" {% if post and post.is_featured %}checked{% endif %}> Destacado
+      </label>
+    </div>
+    <div><label class="label">SEO Title</label><input class="input" name="seo_title" value="{{ post.seo_title if post else '' }}"></div>
+    <div><label class="label">SEO Description</label><input class="input" name="seo_description" value="{{ post.seo_description if post else '' }}"></div>
+  </div>
+
+  <!-- ── Imagen de portada ── -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-slate-800 mb-4">Imagen de portada</h2>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <button type="button" id="news-cover-picker-open" class="btn btn-secondary">Elegir imagen</button>
+      <button type="button" id="news-cover-picker-clear" class="btn btn-secondary">Quitar imagen</button>
+    </div>
+    <div id="news-cover-selection-label" class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      {% if post and post.cover %}#{{ post.cover.id }} · {{ post.cover.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+    </div>
+    <p class="mt-2 text-xs text-slate-500">Elegí una imagen de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a> desde la galería.</p>
+    <div id="news-cover-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 max-w-sm" style="aspect-ratio:16/7;display:flex;align-items:center;justify-content:center;">
+      {% if post and post.cover %}<img src="{{ post.cover.public_url }}" alt="Cover" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen seleccionada</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- ── Imagen OG ── -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-slate-800 mb-1">Imagen OG <span class="font-normal text-slate-500 text-sm">(Open Graph / redes sociales)</span></h2>
+    <p class="text-xs text-slate-500 mb-4">Si no se elige, se usará la imagen de portada. Tamaño recomendado: 1200×630 px.</p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <button type="button" id="news-og-picker-open" class="btn btn-secondary">Elegir imagen</button>
+      <button type="button" id="news-og-picker-clear" class="btn btn-secondary">Quitar imagen</button>
+    </div>
+    <div id="news-og-selection-label" class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      {% if post and post.og_image %}#{{ post.og_image.id }} · {{ post.og_image.original_filename }}{% else %}Sin imagen seleccionada (se usará la portada){% endif %}
+    </div>
+    <div id="news-og-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 max-w-sm" style="aspect-ratio:1200/630;display:flex;align-items:center;justify-content:center;">
+      {% if post and post.og_image %}<img src="{{ post.og_image.public_url }}" alt="OG" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen OG seleccionada</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="text-right"><button type="submit" class="btn btn-primary">Guardar</button></div>
+</form>
+
+<!-- ══ Modal: Portada ══════════════════════════════════════════════════ -->
+<div id="news-cover-picker-modal" data-picker-modal style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(2,6,23,.6);padding:1rem;">
+  <div style="display:flex;flex-direction:column;width:100%;max-width:900px;max-height:90vh;background:#fff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:600;color:#0f172a;">Seleccionar imagen de portada</div>
+        <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Filtrá por nombre y hacé clic en una imagen para elegirla.</div>
+      </div>
+      <button type="button" class="js-close-news-cover-picker" style="background:none;border:none;cursor:pointer;padding:.4rem;border-radius:.5rem;color:#94a3b8;" aria-label="Cerrar"><i data-lucide="x" style="width:1.2rem;height:1.2rem;display:block;"></i></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.9rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <input id="news-cover-picker-search" type="search" class="input" placeholder="Filtrar por nombre de archivo" style="flex:1;">
+      <button type="button" id="news-cover-picker-clear-selection" class="btn btn-secondary" style="white-space:nowrap;">Sin imagen</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div id="news-cover-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        {% if post and post.cover %}<img src="{{ post.cover.public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
+        <div id="news-cover-picker-current-name" style="font-size:.85rem;font-weight:500;color:#1e293b;margin-top:.15rem;">
+          {% if post and post.cover %}#{{ post.cover.id }} · {{ post.cover.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        {% for asset in media_assets %}
+        <div role="button" tabindex="0" class="js-news-cover-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+          <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
+        </div>
+        {% endfor %}
+        <div id="news-cover-picker-empty" style="display:none;grid-column:1/-1;padding:3rem 1rem;text-align:center;font-size:.875rem;color:#94a3b8;border:2px dashed #cbd5e1;border-radius:12px;">No hay imágenes que coincidan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: OG Image ══════════════════════════════════════════════════ -->
+<div id="news-og-picker-modal" data-picker-modal style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(2,6,23,.6);padding:1rem;">
+  <div style="display:flex;flex-direction:column;width:100%;max-width:900px;max-height:90vh;background:#fff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:600;color:#0f172a;">Seleccionar imagen OG</div>
+        <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Filtrá por nombre y hacé clic en una imagen para elegirla.</div>
+      </div>
+      <button type="button" class="js-close-news-og-picker" style="background:none;border:none;cursor:pointer;padding:.4rem;border-radius:.5rem;color:#94a3b8;" aria-label="Cerrar"><i data-lucide="x" style="width:1.2rem;height:1.2rem;display:block;"></i></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.9rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <input id="news-og-picker-search" type="search" class="input" placeholder="Filtrar por nombre de archivo" style="flex:1;">
+      <button type="button" id="news-og-picker-clear-selection" class="btn btn-secondary" style="white-space:nowrap;">Sin imagen</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div id="news-og-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        {% if post and post.og_image %}<img src="{{ post.og_image.public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
+        <div id="news-og-picker-current-name" style="font-size:.85rem;font-weight:500;color:#1e293b;margin-top:.15rem;">
+          {% if post and post.og_image %}#{{ post.og_image.id }} · {{ post.og_image.original_filename }}{% else %}Sin imagen seleccionada{% endif %}
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        {% for asset in media_assets %}
+        <div role="button" tabindex="0" class="js-news-og-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+          <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
+        </div>
+        {% endfor %}
+        <div id="news-og-picker-empty" style="display:none;grid-column:1/-1;padding:3rem 1rem;text-align:center;font-size:.875rem;color:#94a3b8;border:2px dashed #cbd5e1;border-radius:12px;">No hay imágenes que coincidan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* Factory – shared by all pickers on this page */
+  function makePicker(cfg) {
+    const assetMap = new Map(cfg.options.map(function (btn) {
+      return [btn.dataset.assetId, { id: btn.dataset.assetId, name: btn.dataset.assetName || '', url: btn.dataset.assetUrl || '' }];
+    }));
+    const noLabel = cfg.emptyLabel || 'Sin imagen seleccionada';
+
+    const render = function () {
+      const asset = assetMap.get(cfg.input.value || '');
+      cfg.options.forEach(function (btn) {
+        const sel = btn.dataset.assetId === (cfg.input.value || '');
+        btn.classList.toggle('picker-selected', sel);
+        btn.style.borderColor = sel ? '#3b82f6' : '#e2e8f0';
+        btn.style.boxShadow   = sel ? '0 0 0 3px rgba(59,130,246,.25)' : 'none';
+      });
+      if (!asset) {
+        cfg.label.textContent = noLabel;
+        cfg.preview.innerHTML = '<div style="color:#94a3b8;font-size:.85rem;text-align:center;padding:2rem;">' + noLabel + '</div>';
+        if (cfg.curName) cfg.curName.textContent = 'Sin imagen seleccionada';
+        if (cfg.curPrev) cfg.curPrev.innerHTML = '<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>';
+        return;
+      }
+      const text = '#' + asset.id + ' · ' + asset.name;
+      cfg.label.textContent = text;
+      cfg.preview.innerHTML = '<img src="' + asset.url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">';
+      if (cfg.curName) cfg.curName.textContent = text;
+      if (cfg.curPrev) cfg.curPrev.innerHTML = '<img src="' + asset.url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">';
+    };
+
+    const open  = function () { cfg.modal.style.display = 'flex'; cfg.search.value = ''; cfg.search.focus(); filter(); };
+    const close = function () { cfg.modal.style.display = 'none'; };
+    const filter = function () {
+      const q = cfg.search.value.trim().toLowerCase(); let n = 0;
+      cfg.options.forEach(function (btn) { const ok = !q || (btn.dataset.search || '').includes(q); btn.style.display = ok ? '' : 'none'; if (ok) n++; });
+      cfg.empty.style.display = n > 0 ? 'none' : 'block';
+    };
+
+    cfg.options.forEach(function (btn) {
+      btn.addEventListener('click', function () { cfg.input.value = btn.dataset.assetId || ''; render(); close(); });
+      btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); } });
+    });
+    cfg.openBtn.addEventListener('click', open);
+    cfg.clearBtn.addEventListener('click', function () { cfg.input.value = ''; render(); });
+    cfg.clearSelBtn.addEventListener('click', function () { cfg.input.value = ''; render(); close(); });
+    cfg.search.addEventListener('input', filter);
+    cfg.closeBtns.forEach(function (btn) { btn.addEventListener('click', close); });
+    cfg.modal.addEventListener('click', function (e) { if (e.target === cfg.modal) close(); });
+    render();
+  }
+
+  makePicker({
+    input:      document.getElementById('news-cover-media-id'),
+    label:      document.getElementById('news-cover-selection-label'),
+    preview:    document.getElementById('news-cover-preview-frame'),
+    openBtn:    document.getElementById('news-cover-picker-open'),
+    clearBtn:   document.getElementById('news-cover-picker-clear'),
+    modal:      document.getElementById('news-cover-picker-modal'),
+    search:     document.getElementById('news-cover-picker-search'),
+    clearSelBtn:document.getElementById('news-cover-picker-clear-selection'),
+    curName:    document.getElementById('news-cover-picker-current-name'),
+    curPrev:    document.getElementById('news-cover-picker-current-preview'),
+    closeBtns:  Array.from(document.querySelectorAll('.js-close-news-cover-picker')),
+    options:    Array.from(document.querySelectorAll('.js-news-cover-option')),
+    empty:      document.getElementById('news-cover-picker-empty'),
+  });
+
+  makePicker({
+    input:      document.getElementById('news-og-media-id'),
+    label:      document.getElementById('news-og-selection-label'),
+    preview:    document.getElementById('news-og-preview-frame'),
+    openBtn:    document.getElementById('news-og-picker-open'),
+    clearBtn:   document.getElementById('news-og-picker-clear'),
+    modal:      document.getElementById('news-og-picker-modal'),
+    search:     document.getElementById('news-og-picker-search'),
+    clearSelBtn:document.getElementById('news-og-picker-clear-selection'),
+    curName:    document.getElementById('news-og-picker-current-name'),
+    curPrev:    document.getElementById('news-og-picker-current-preview'),
+    closeBtns:  Array.from(document.querySelectorAll('.js-close-news-og-picker')),
+    options:    Array.from(document.querySelectorAll('.js-news-og-option')),
+    empty:      document.getElementById('news-og-picker-empty'),
+    emptyLabel: 'Sin imagen OG seleccionada',
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('[data-picker-modal]').forEach(function (m) { if (m.style.display !== 'none') m.style.display = 'none'; });
+  });
+  lucide.createIcons();
+})();
+</script>
+{% endblock %}

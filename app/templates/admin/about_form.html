@@ -1,0 +1,222 @@
+{% extends "admin/base.html" %}
+{% block title %}Sección Nosotros{% endblock %}
+{% block content %}
+{% set cfg = block.config_json or {} %}
+<div class="flex items-center justify-between mb-6 gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Sección "Nosotros"</h1>
+    <p class="text-sm text-slate-500 mt-1">Editá el encabezado y las tarjetas de la sección de identidad/valores del municipio.</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('admin.blocks_list', page_type='home') }}">Bloques Home</a>
+</div>
+
+<form id="about-form" method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="cards-json-input" name="cards_json" value="">
+
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div class="md:col-span-2 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Encabezado de la sección</div>
+        <p class="text-xs text-slate-500 mt-1">El texto de la columna izquierda — etiqueta, título y descripción.</p>
+      </div>
+      <label class="label inline-flex items-center gap-2 !mb-0">
+        <input type="checkbox" name="is_active" {% if block.is_active %}checked{% endif %}>
+        Habilitado
+      </label>
+    </div>
+
+    <div>
+      <label class="label">Etiqueta / badge</label>
+      <input class="input" name="eyebrow" value="{{ cfg.get('eyebrow', '') }}" placeholder="DESCUBRÍ">
+      <p class="text-xs text-slate-500 mt-1">Texto pequeño en mayúsculas sobre el título (ej: DESCUBRÍ, QUIÉNES SOMOS, NUESTROS VALORES).</p>
+    </div>
+
+    <div>
+      <label class="label">Título principal</label>
+      <input class="input" name="title" value="{{ block.title or '' }}" placeholder="Un municipio ligado al paisaje y al trabajo local">
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="label">Descripción</label>
+      <textarea class="input" name="subtitle" rows="3" placeholder="Breve párrafo que acompaña el título...">{{ block.subtitle or '' }}</textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <div>
+        <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Tarjetas</div>
+        <p class="text-xs text-slate-500 mt-1">Podés agregar hasta 8 tarjetas. Cada una aparece en la grilla de la derecha con un color distinto.</p>
+      </div>
+      <button type="button" id="add-card-btn" class="btn btn-secondary text-sm">
+        <i data-lucide="plus" class="w-4 h-4"></i> Agregar tarjeta
+      </button>
+    </div>
+
+    <div id="cards-editor" class="space-y-3">
+      <!-- JS renders cards here -->
+    </div>
+
+    <p id="cards-empty-msg" class="hidden text-sm text-slate-400 text-center py-6 border border-dashed border-slate-300 rounded-xl mt-2">
+      No hay tarjetas. Usá el botón "Agregar tarjeta" para añadir la primera.
+    </p>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <button type="submit" class="btn btn-primary">Guardar sección</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  const INITIAL_CARDS = {{ (cfg.get('items', []) or []) | tojson | safe }};
+  const MAX_CARDS = 8;
+  const DEFAULT_TONES = [
+    { from: '#0d3b66', to: '#155e75' },
+    { from: '#7c3aed', to: '#c026d3' },
+    { from: '#0f766e', to: '#1d4ed8' },
+    { from: '#d97706', to: '#ea580c' },
+  ];
+
+  const editor = document.getElementById('cards-editor');
+  const emptyMsg = document.getElementById('cards-empty-msg');
+  const addBtn = document.getElementById('add-card-btn');
+  const hiddenInput = document.getElementById('cards-json-input');
+  const form = document.getElementById('about-form');
+
+  let cards = INITIAL_CARDS.map(function (c, i) {
+    return {
+      title: c.title || '',
+      text: c.text || '',
+      color_from: c.color_from || DEFAULT_TONES[i % DEFAULT_TONES.length].from,
+      color_to: c.color_to || DEFAULT_TONES[i % DEFAULT_TONES.length].to,
+    };
+  });
+
+  function renderCards() {
+    editor.innerHTML = '';
+    cards.forEach(function (card, idx) {
+      const fromColor = card.color_from || DEFAULT_TONES[idx % DEFAULT_TONES.length].from;
+      const toColor = card.color_to || DEFAULT_TONES[idx % DEFAULT_TONES.length].to;
+      const gradBg = `linear-gradient(135deg, ${fromColor}, ${toColor})`;
+
+      const div = document.createElement('div');
+      div.setAttribute('data-card-row', idx);
+      div.className = 'grid md:grid-cols-[1fr_1.6fr_auto] gap-3 items-start p-4 bg-slate-50 rounded-xl border border-slate-200';
+      div.innerHTML = `
+        <div>
+          <label class="label text-xs">Título de la tarjeta</label>
+          <input class="input card-title" type="text" value="${escHtml(card.title)}" placeholder="Ej: Turismo serrano" data-idx="${idx}">
+          <div class="flex items-center gap-3 mt-3">
+            <div class="card-gradient-preview w-10 h-10 rounded-xl shadow flex-shrink-0" style="background:${gradBg}"></div>
+            <div>
+              <p class="text-[10px] font-medium text-slate-500 mb-1">Degradé del círculo</p>
+              <div class="flex items-center gap-2">
+                <label class="text-[10px] text-slate-400">Inicio</label>
+                <input type="color" class="card-color-from h-7 w-9 rounded cursor-pointer border border-slate-300 p-0.5" value="${fromColor}" data-idx="${idx}" title="Color inicio">
+                <label class="text-[10px] text-slate-400">Fin</label>
+                <input type="color" class="card-color-to h-7 w-9 rounded cursor-pointer border border-slate-300 p-0.5" value="${toColor}" data-idx="${idx}" title="Color fin">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="label text-xs">Descripción</label>
+          <textarea class="input card-text" rows="2" placeholder="Texto breve que acompaña la tarjeta..." data-idx="${idx}">${escHtml(card.text)}</textarea>
+        </div>
+        <div class="flex flex-col gap-1 pt-6">
+          ${idx > 0 ? `<button type="button" class="btn btn-secondary px-2 py-1 text-xs move-up" data-idx="${idx}" title="Subir"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : ''}
+          ${idx < cards.length - 1 ? `<button type="button" class="btn btn-secondary px-2 py-1 text-xs move-down" data-idx="${idx}" title="Bajar"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : ''}
+          <button type="button" class="btn btn-secondary px-2 py-1 text-xs remove-card" data-idx="${idx}" title="Eliminar">
+            <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
+          </button>
+        </div>
+      `;
+      editor.appendChild(div);
+    });
+
+    emptyMsg.classList.toggle('hidden', cards.length > 0);
+    addBtn.disabled = cards.length >= MAX_CARDS;
+
+    if (window.lucide) lucide.createIcons();
+
+    editor.querySelectorAll('.card-title').forEach(function (el) {
+      el.addEventListener('input', function () { cards[+el.dataset.idx].title = el.value; });
+    });
+    editor.querySelectorAll('.card-text').forEach(function (el) {
+      el.addEventListener('input', function () { cards[+el.dataset.idx].text = el.value; });
+    });
+    editor.querySelectorAll('.card-color-from').forEach(function (el) {
+      el.addEventListener('input', function () {
+        const i = +el.dataset.idx;
+        cards[i].color_from = el.value;
+        const row = editor.querySelector(`[data-card-row="${i}"]`);
+        if (row) {
+          const preview = row.querySelector('.card-gradient-preview');
+          if (preview) preview.style.background = `linear-gradient(135deg, ${el.value}, ${cards[i].color_to})`;
+        }
+      });
+    });
+    editor.querySelectorAll('.card-color-to').forEach(function (el) {
+      el.addEventListener('input', function () {
+        const i = +el.dataset.idx;
+        cards[i].color_to = el.value;
+        const row = editor.querySelector(`[data-card-row="${i}"]`);
+        if (row) {
+          const preview = row.querySelector('.card-gradient-preview');
+          if (preview) preview.style.background = `linear-gradient(135deg, ${cards[i].color_from}, ${el.value})`;
+        }
+      });
+    });
+    editor.querySelectorAll('.remove-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        cards.splice(+btn.dataset.idx, 1);
+        renderCards();
+      });
+    });
+    editor.querySelectorAll('.move-up').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = +btn.dataset.idx;
+        [cards[i - 1], cards[i]] = [cards[i], cards[i - 1]];
+        renderCards();
+      });
+    });
+    editor.querySelectorAll('.move-down').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = +btn.dataset.idx;
+        [cards[i], cards[i + 1]] = [cards[i + 1], cards[i]];
+        renderCards();
+      });
+    });
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  addBtn.addEventListener('click', function () {
+    if (cards.length < MAX_CARDS) {
+      const i = cards.length;
+      cards.push({
+        title: '',
+        text: '',
+        color_from: DEFAULT_TONES[i % DEFAULT_TONES.length].from,
+        color_to: DEFAULT_TONES[i % DEFAULT_TONES.length].to,
+      });
+      renderCards();
+    }
+  });
+
+  form.addEventListener('submit', function () {
+    hiddenInput.value = JSON.stringify(cards);
+  });
+
+  renderCards();
+})();
+</script>
+{% endblock %}

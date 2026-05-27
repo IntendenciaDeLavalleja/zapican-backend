@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}Trámites{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Trámites</h1>
+    <p class="text-sm text-slate-500 mt-1">Catálogo público y solicitudes que llegan desde la web.</p>
+  </div>
+  <div class="flex gap-2">
+    <a class="btn btn-secondary" href="{{ url_for('admin.procedure_submissions') }}">Solicitudes{% if new_count %} <span class="badge bg-amber-100 text-amber-800">{{ new_count }} nuevas</span>{% endif %}</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.procedure_new') }}">+ Nuevo trámite</a>
+  </div>
+</div>
+
+<div class="card overflow-x-auto">
+  <table class="table">
+    <thead>
+      <tr><th>Orden</th><th>Título</th><th>Slug</th><th>Documentos</th><th>Estado</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for item in procedures %}
+      <tr>
+        <td>{{ item.order_index }}</td>
+        <td>
+          <a class="font-medium hover:underline" href="{{ url_for('admin.procedure_edit', procedure_id=item.id) }}">{{ item.title }}</a>
+          {% if item.is_featured %}<span class="badge bg-blue-100 text-blue-800 ml-2">destacado</span>{% endif %}
+        </td>
+        <td><code class="text-xs">{{ item.slug }}</code></td>
+        <td>{{ item.required_documents | length }}</td>
+        <td>
+          {% if item.is_active %}<span class="badge bg-emerald-100 text-emerald-800">activo</span>{% else %}<span class="badge bg-slate-200">inactivo</span>{% endif %}
+        </td>
+        <td class="text-right space-x-2">
+          <a class="btn btn-secondary" href="{{ url_for('admin.procedure_edit', procedure_id=item.id) }}">Editar</a>
+          <a class="btn btn-secondary" href="{{ url_for('admin.procedure_submissions', procedure_id=item.id) }}">Solicitudes</a>
+          <form method="post" action="{{ url_for('admin.procedure_delete', procedure_id=item.id) }}" class="inline" onsubmit="return confirm('Eliminar trámite?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger">×</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-slate-400 py-8">Sin trámites cargados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

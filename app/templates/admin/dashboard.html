@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">Dashboard</h1>
+</div>
+{% if stats %}
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div class="card"><div class="text-xs text-slate-500">Comunicados publicados</div><div class="text-3xl font-semibold mt-1">{{ stats.news_published }}</div></div>
+  <div class="card"><div class="text-xs text-slate-500">Borradores</div><div class="text-3xl font-semibold mt-1">{{ stats.news_draft }}</div></div>
+  <div class="card"><div class="text-xs text-slate-500">Eventos próximos</div><div class="text-3xl font-semibold mt-1">{{ stats.upcoming_events }}</div></div>
+  <div class="card"><div class="text-xs text-slate-500">Reuniones próximas</div><div class="text-3xl font-semibold mt-1">{{ stats.upcoming_meetings }}</div></div>
+  <div class="card"><div class="text-xs text-slate-500">Mensajes nuevos</div><div class="text-3xl font-semibold mt-1">{{ stats.new_messages }}</div></div>
+  <div class="card"><div class="text-xs text-slate-500">Form. nuevas</div><div class="text-3xl font-semibold mt-1">{{ stats.new_submissions }}</div></div>
+</div>
+{% else %}
+<div class="card">Sin datos disponibles aún. Comienza creando noticias, eventos o reuniones.</div>
+{% endif %}
+{% endblock %}

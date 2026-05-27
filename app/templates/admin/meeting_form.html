@@ -1,0 +1,206 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if meeting else 'Nueva' }} sesión{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if meeting else 'Nueva' }} sesión del Concejo</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.meetings_list') }}">← Volver</a>
+</div>
+
+<form method="post" class="space-y-5">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="meeting-doc-media-id" name="document_media_id" value="{{ meeting.document_media_id if meeting and meeting.document_media_id else '' }}">
+
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div class="md:col-span-2"><label class="label">Título *</label><input class="input" name="title" required value="{{ meeting.title if meeting else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Descripción</label><input class="input" name="description" value="{{ meeting.description if meeting else '' }}"></div>
+    <div><label class="label">Fecha *</label><input class="input" type="datetime-local" name="meeting_datetime" required value="{{ meeting.meeting_datetime.strftime('%Y-%m-%dT%H:%M') if meeting and meeting.meeting_datetime else '' }}"></div>
+    <div><label class="label">Estado</label><select class="input" name="status">{% for s in statuses %}<option value="{{ s }}" {% if meeting and meeting.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+    <div><label class="label">Lugar</label><input class="input" name="location_name" value="{{ meeting.location_name if meeting else '' }}"></div>
+    <div><label class="label">Dirección</label><input class="input" name="address" value="{{ meeting.address if meeting else '' }}"></div>
+    <div class="flex items-center mt-6">
+      <label class="label inline-flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="is_public" {% if not meeting or meeting.is_public %}checked{% endif %}> Pública
+      </label>
+    </div>
+    <div class="md:col-span-2"><label class="label">Orden del día (HTML)</label><textarea class="input font-mono text-xs" name="agenda_html" rows="6">{{ meeting.agenda_html if meeting else '' }}</textarea></div>
+    <div class="md:col-span-2"><label class="label">Acta (HTML)</label><textarea class="input font-mono text-xs" name="minutes_html" rows="8">{{ meeting.minutes_html if meeting else '' }}</textarea></div>
+  </div>
+
+  <!-- ── Documento adjunto ── -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-slate-800 mb-4">Documento adjunto</h2>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <button type="button" id="meeting-doc-picker-open" class="btn btn-secondary">Elegir archivo</button>
+      <button type="button" id="meeting-doc-picker-clear" class="btn btn-secondary">Quitar archivo</button>
+    </div>
+    <div id="meeting-doc-selection-label" class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      {% if meeting and meeting.document %}#{{ meeting.document.id }} · {{ meeting.document.original_filename }}{% else %}Sin archivo seleccionado{% endif %}
+    </div>
+    <p class="mt-2 text-xs text-slate-500">Elegí un archivo de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a> desde la galería (PDF, imagen, etc.).</p>
+    <div id="meeting-doc-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 max-w-sm" style="min-height:60px;display:flex;align-items:center;justify-content:center;padding:.5rem;">
+      {% if meeting and meeting.document %}
+        {% if meeting.document.mime_type and meeting.document.mime_type.startswith('image/') %}
+          <img src="{{ meeting.document.public_url }}" alt="Preview" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:.5rem;">
+        {% else %}
+          <div class="flex items-center gap-3 px-3">
+            <i data-lucide="file-text" style="width:2rem;height:2rem;flex-shrink:0;color:#64748b;"></i>
+            <div class="text-sm text-slate-600 font-medium break-all">{{ meeting.document.original_filename }}</div>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="text-sm text-slate-400 text-center px-6">Sin archivo seleccionado</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text-right"><button type="submit" class="btn btn-primary">Guardar</button></div>
+</form>
+
+<!-- ══ Modal: Documento ════════════════════════════════════════════════ -->
+<div id="meeting-doc-picker-modal" data-picker-modal style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(2,6,23,.6);padding:1rem;">
+  <div style="display:flex;flex-direction:column;width:100%;max-width:900px;max-height:90vh;background:#fff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:600;color:#0f172a;">Seleccionar documento o archivo</div>
+        <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Filtrá por nombre y hacé clic en un archivo para elegirlo.</div>
+      </div>
+      <button type="button" class="js-close-meeting-doc-picker" style="background:none;border:none;cursor:pointer;padding:.4rem;border-radius:.5rem;color:#94a3b8;" aria-label="Cerrar"><i data-lucide="x" style="width:1.2rem;height:1.2rem;display:block;"></i></button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.9rem 1.5rem;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <input id="meeting-doc-picker-search" type="search" class="input" placeholder="Filtrar por nombre de archivo" style="flex:1;">
+      <button type="button" id="meeting-doc-picker-clear-selection" class="btn btn-secondary" style="white-space:nowrap;">Sin archivo</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+      <div id="meeting-doc-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        {% if meeting and meeting.document %}
+          {% if meeting.document.mime_type and meeting.document.mime_type.startswith('image/') %}
+            <img src="{{ meeting.document.public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+            <i data-lucide="file-text" style="width:1.4rem;height:1.4rem;color:#64748b;"></i>
+          {% endif %}
+        {% else %}
+          <span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>
+        {% endif %}
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
+        <div id="meeting-doc-picker-current-name" style="font-size:.85rem;font-weight:500;color:#1e293b;margin-top:.15rem;">
+          {% if meeting and meeting.document %}#{{ meeting.document.id }} · {{ meeting.document.original_filename }}{% else %}Sin archivo seleccionado{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        {% for asset in media_assets %}
+        <div role="button" tabindex="0" class="js-meeting-doc-option"
+          data-asset-id="{{ asset.id }}"
+          data-asset-name="{{ asset.original_filename|e }}"
+          data-asset-url="{{ asset.public_url|e }}"
+          data-asset-mime="{{ asset.mime_type|e }}"
+          data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}"
+          style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;"
+          onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';"
+          onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:120px;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">
+            {% if asset.mime_type and asset.mime_type.startswith('image/') %}
+              <img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;">
+            {% else %}
+              <i data-lucide="file-text" style="width:2.5rem;height:2.5rem;color:#94a3b8;"></i>
+            {% endif %}
+          </div>
+          <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }} · {{ asset.mime_type or '?' }}</div>
+            <div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        <div id="meeting-doc-picker-empty" style="display:none;grid-column:1/-1;padding:3rem 1rem;text-align:center;font-size:.875rem;color:#94a3b8;border:2px dashed #cbd5e1;border-radius:12px;">No hay archivos que coincidan.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const input      = document.getElementById('meeting-doc-media-id');
+  const label      = document.getElementById('meeting-doc-selection-label');
+  const preview    = document.getElementById('meeting-doc-preview-frame');
+  const openBtn    = document.getElementById('meeting-doc-picker-open');
+  const clearBtn   = document.getElementById('meeting-doc-picker-clear');
+  const modal      = document.getElementById('meeting-doc-picker-modal');
+  const search     = document.getElementById('meeting-doc-picker-search');
+  const clearSel   = document.getElementById('meeting-doc-picker-clear-selection');
+  const curName    = document.getElementById('meeting-doc-picker-current-name');
+  const curPrev    = document.getElementById('meeting-doc-picker-current-preview');
+  const closeBtns  = Array.from(document.querySelectorAll('.js-close-meeting-doc-picker'));
+  const options    = Array.from(document.querySelectorAll('.js-meeting-doc-option'));
+  const emptyState = document.getElementById('meeting-doc-picker-empty');
+
+  const assetMap = new Map(options.map(function (btn) {
+    return [btn.dataset.assetId, {
+      id: btn.dataset.assetId, name: btn.dataset.assetName || '',
+      url: btn.dataset.assetUrl || '', mime: btn.dataset.assetMime || ''
+    }];
+  }));
+
+  const isImage = function (mime) { return mime && mime.startsWith('image/'); };
+
+  const render = function () {
+    const asset = assetMap.get(input.value || '');
+    options.forEach(function (btn) {
+      const sel = btn.dataset.assetId === (input.value || '');
+      btn.classList.toggle('picker-selected', sel);
+      btn.style.borderColor = sel ? '#3b82f6' : '#e2e8f0';
+      btn.style.boxShadow   = sel ? '0 0 0 3px rgba(59,130,246,.25)' : 'none';
+    });
+    if (!asset) {
+      label.textContent = 'Sin archivo seleccionado';
+      preview.innerHTML = '<div style="color:#94a3b8;font-size:.85rem;text-align:center;padding:1.5rem;">Sin archivo seleccionado</div>';
+      if (curName) curName.textContent = 'Sin archivo seleccionado';
+      if (curPrev) curPrev.innerHTML = '<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>';
+      return;
+    }
+    const text = '#' + asset.id + ' · ' + asset.name;
+    label.textContent = text;
+    if (isImage(asset.mime)) {
+      preview.innerHTML = '<img src="' + asset.url + '" alt="" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:.5rem;">';
+      if (curPrev) curPrev.innerHTML = '<img src="' + asset.url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">';
+    } else {
+      preview.innerHTML = '<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 1rem;"><i data-lucide="file-text" style="width:2rem;height:2rem;flex-shrink:0;color:#64748b;"></i><div style="font-size:.875rem;color:#334155;font-weight:500;word-break:break-all;">' + asset.name + '</div></div>';
+      if (curPrev) curPrev.innerHTML = '<i data-lucide="file-text" style="width:1.4rem;height:1.4rem;color:#64748b;"></i>';
+    }
+    if (curName) curName.textContent = text;
+    lucide.createIcons();
+  };
+
+  const open  = function () { modal.style.display = 'flex'; search.value = ''; search.focus(); filter(); };
+  const close = function () { modal.style.display = 'none'; };
+  const filter = function () {
+    const q = search.value.trim().toLowerCase(); let n = 0;
+    options.forEach(function (btn) { const ok = !q || (btn.dataset.search || '').includes(q); btn.style.display = ok ? '' : 'none'; if (ok) n++; });
+    emptyState.style.display = n > 0 ? 'none' : 'block';
+  };
+
+  options.forEach(function (btn) {
+    btn.addEventListener('click', function () { input.value = btn.dataset.assetId || ''; render(); close(); });
+    btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); } });
+  });
+  openBtn.addEventListener('click', open);
+  clearBtn.addEventListener('click', function () { input.value = ''; render(); });
+  clearSel.addEventListener('click', function () { input.value = ''; render(); close(); });
+  search.addEventListener('input', filter);
+  closeBtns.forEach(function (btn) { btn.addEventListener('click', close); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.style.display !== 'none') close();
+  });
+  render();
+  lucide.createIcons();
+})();
+</script>
+{% endblock %}

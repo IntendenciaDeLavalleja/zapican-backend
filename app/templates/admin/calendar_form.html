@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar' if item else 'Nuevo' }} item de agenda{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">{{ 'Editar' if item else 'Nuevo' }} item de agenda</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.calendar_list') }}">← Agenda</a>
+</div>
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card grid md:grid-cols-2 gap-4">
+    <div class="md:col-span-2"><label class="label">Título *</label><input class="input" name="title" required value="{{ item.title if item else '' }}"></div>
+    <div><label class="label">Tipo</label><select class="input" name="type">{% for type_name in item_types %}<option value="{{ type_name }}" {% if item and item.type == type_name %}selected{% endif %}>{{ type_name }}</option>{% endfor %}</select></div>
+    <div><label class="label">Estado</label><input class="input" name="status" value="{{ item.status if item else 'published' }}"></div>
+    <div><label class="label">Inicio *</label><input class="input" type="datetime-local" name="start_datetime" required value="{{ item.start_datetime.strftime('%Y-%m-%dT%H:%M') if item and item.start_datetime else '' }}"></div>
+    <div><label class="label">Fin</label><input class="input" type="datetime-local" name="end_datetime" value="{{ item.end_datetime.strftime('%Y-%m-%dT%H:%M') if item and item.end_datetime else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Lugar</label><input class="input" name="location" value="{{ item.location if item else '' }}"></div>
+    <div class="md:col-span-2"><label class="label">Descripción</label><textarea class="input" name="description" rows="5">{{ item.description if item else '' }}</textarea></div>
+  </div>
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block title %}Identidad visual{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">Identidad visual</h1>
+  <a class="btn btn-secondary" href="{{ url_for('admin.dashboard') }}">← Volver</a>
+</div>
+
+<form method="post" class="card mb-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="action" value="apply_preset">
+  <label class="label">Preset rápido</label>
+  <div class="flex flex-wrap gap-2">
+    {% for p in presets %}
+    <button name="preset" value="{{ p }}" class="btn btn-secondary {% if theme.preset==p %}ring-2 ring-emerald-500{% endif %}">{{ p }}</button>
+    {% endfor %}
+  </div>
+</form>
+
+<form method="post" class="space-y-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card grid md:grid-cols-3 gap-4">
+    {% for field, label in [('primary_color','Primario'),('secondary_color','Secundario'),('accent_color','Acento'),('background_color','Fondo'),('text_color','Texto')] %}
+    <div>
+      <label class="label">{{ label }}</label>
+      <input class="input" type="color" name="{{ field }}" value="{{ theme[field] }}">
+      <div class="text-xs text-slate-500 mt-1">{{ theme[field] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="card grid md:grid-cols-3 gap-4">
+    <div class="md:col-span-3 text-sm font-semibold text-slate-600 uppercase tracking-wide">Degradé de fondo</div>
+    <div>
+      <label class="label">Color inicio</label>
+      <input class="input" type="color" name="background_gradient_from" value="{{ theme.background_gradient_from }}">
+      <div class="text-xs text-slate-500 mt-1">{{ theme.background_gradient_from }}</div>
+    </div>
+    <div>
+      <label class="label">Color final</label>
+      <input class="input" type="color" name="background_gradient_to" value="{{ theme.background_gradient_to }}">
+      <div class="text-xs text-slate-500 mt-1">{{ theme.background_gradient_to }}</div>
+    </div>
+    <div>
+      <label class="label">Ángulo</label>
+      <input class="input" type="number" min="0" max="360" step="1" name="background_gradient_angle" value="{{ theme.background_gradient_angle }}">
+      <div class="text-xs text-slate-500 mt-1">{{ theme.background_gradient_angle }}°</div>
+    </div>
+  </div>
+  <div class="card grid md:grid-cols-3 gap-4">
+    <div><label class="label">Header</label><select class="input" name="header_variant">{% for v in header_variants %}<option {% if theme.header_variant==v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label class="label">Footer</label><select class="input" name="footer_variant">{% for v in footer_variants %}<option {% if theme.footer_variant==v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label class="label">Cards</label><select class="input" name="card_style">{% for v in card_styles %}<option {% if theme.card_style==v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label class="label">Hero</label><select class="input" name="hero_style">{% for v in hero_styles %}<option {% if theme.hero_style==v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label class="label">Tipografía</label><select class="input" name="font_style">{% for v in font_styles %}<option {% if theme.font_style==v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label class="label inline-flex items-center gap-2 mt-6"><input type="checkbox" name="enable_dark_section" {% if theme.enable_dark_section %}checked{% endif %}> Sección oscura</label></div>
+  </div>
+  <input type="hidden" name="preset" value="{{ theme.preset }}">
+  <div class="text-right"><button class="btn btn-primary">Guardar</button></div>
+</form>
+{% endblock %}

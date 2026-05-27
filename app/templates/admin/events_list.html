@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block title %}Eventos{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 gap-2">
+  <h1 class="text-2xl font-semibold">Eventos</h1>
+  <div class="flex gap-2">
+    
+    <a class="btn btn-primary" href="{{ url_for('admin.event_new') }}">+ Nuevo</a>
+  </div>
+</div>
+<div class="card overflow-x-auto">
+  <table class="table">
+    <thead><tr><th>Título</th><th>Inicio</th><th>Lugar</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td><a class="font-medium hover:underline" href="{{ url_for('admin.event_edit', event_id=e.id) }}">{{ e.title }}</a></td>
+        <td>{{ e.start_datetime.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ e.location_name or '—' }}</td>
+        <td><span class="badge bg-slate-100">{{ e.status }}</span></td>
+        <td class="text-right"><div class="flex items-center justify-end gap-2"><a class="btn btn-secondary" href="{{ url_for('admin.event_edit', event_id=e.id) }}">Editar</a><form method="post" action="{{ url_for('admin.event_delete', event_id=e.id) }}" onsubmit="return confirm('Eliminar?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger">×</button></form></div></td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="text-center text-slate-400 py-8">Sin eventos.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
