@@ -64,7 +64,7 @@
       <label class="label">Estado</label>
       <select class="input" name="status">
         {% for s in statuses %}
-        <option value="{{ s }}" {% if event and event.status == s %}selected{% endif %}>{{ s }}</option>
+        <option value="{{ s }}" {% if (event and event.status == s) or (not event and s == 'published') %}selected{% endif %}>{{ s }}</option>
         {% endfor %}
       </select>
     </div>

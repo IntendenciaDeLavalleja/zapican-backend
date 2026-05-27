@@ -1,13 +1,21 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ 'Editar' if post else 'Nuevo' }} comunicado{% endblock %}
 {% block content %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+  .ql-toolbar.ql-snow { border-radius: .75rem .75rem 0 0; border-color: #e2e8f0; background: #f8fafc; }
+  .ql-container.ql-snow { border-radius: 0 0 .75rem .75rem; border-color: #e2e8f0; font-size: .9375rem; min-height: 220px; }
+  .ql-editor { min-height: 200px; line-height: 1.7; }
+</style>
+
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-semibold">{{ 'Editar' if post else 'Nuevo' }} comunicado</h1>
   <a class="btn btn-secondary" href="{{ url_for('admin.news_list') }}">← Volver</a>
 </div>
 
-<form method="post" class="space-y-5">
+<form id="news-form" method="post" class="space-y-5">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" id="news-content-html" name="content_html" value="{{ post.content_html | e if post else '' }}">
   <input type="hidden" id="news-cover-media-id" name="cover_media_id" value="{{ post.cover_media_id if post and post.cover_media_id else '' }}">
   <input type="hidden" id="news-og-media-id" name="og_media_id" value="{{ post.og_media_id if post and post.og_media_id else '' }}">
 
@@ -33,13 +41,13 @@
       <textarea class="input" name="excerpt" rows="2">{{ post.excerpt if post else '' }}</textarea>
     </div>
     <div class="md:col-span-2">
-      <label class="label">Contenido HTML</label>
-      <textarea class="input font-mono text-xs" name="content_html" rows="14">{{ post.content_html if post else '' }}</textarea>
+      <label class="label">Contenido</label>
+      <div id="news-content-editor"></div>
     </div>
     <div>
       <label class="label">Estado</label>
       <select class="input" name="status">
-        {% for s in statuses %}<option value="{{ s }}" {% if post and post.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        {% for s in statuses %}<option value="{{ s }}" {% if (post and post.status==s) or (not post and s == 'published') %}selected{% endif %}>{{ s }}</option>{% endfor %}
       </select>
     </div>
     <div class="flex items-center mt-6">
@@ -164,8 +172,32 @@
   </div>
 </div>
 
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
 (function () {
+  const quill = new Quill('#news-content-editor', {
+    theme: 'snow',
+    placeholder: 'Escribí el contenido del comunicado...',
+    modules: {
+      toolbar: [
+        [{ header: [2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link'],
+        ['clean'],
+      ],
+    },
+  });
+
+  const existingHtml = document.getElementById('news-content-html').value;
+  if (existingHtml) {
+    quill.clipboard.dangerouslyPasteHTML(existingHtml);
+  }
+
+  document.getElementById('news-form').addEventListener('submit', function () {
+    document.getElementById('news-content-html').value = quill.root.innerHTML;
+  });
+
   /* Factory – shared by all pickers on this page */
   function makePicker(cfg) {
     const assetMap = new Map(cfg.options.map(function (btn) {

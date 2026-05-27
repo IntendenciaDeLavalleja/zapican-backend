@@ -11,6 +11,7 @@
         {% for s in statuses %}<option value="{{ s }}" {% if request.args.get('status')==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
       </select>
     </form>
+    <a class="btn btn-secondary" href="{{ url_for('admin.news_categories') }}">Categorías</a>
     <a class="btn btn-primary" href="{{ url_for('admin.news_new') }}">+ Nuevo</a>
   </div>
 </div>
