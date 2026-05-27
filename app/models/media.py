@@ -17,6 +17,17 @@ class MediaAsset(TimestampMixin, db.Model):
     public_url: Mapped[str] = mapped_column(String(500), nullable=False)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    @property
+    def resolved_public_url(self) -> str:
+        try:
+            from app.services.minio_service import minio_service
+
+            if minio_service.public_url_base and minio_service.bucket:
+                return minio_service.url_for(self.filename)
+        except Exception:
+            pass
+        return self.public_url
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -24,5 +35,5 @@ class MediaAsset(TimestampMixin, db.Model):
             "original_filename": self.original_filename,
             "mime_type": self.mime_type,
             "size_bytes": self.size_bytes,
-            "public_url": self.public_url,
+            "public_url": self.resolved_public_url,
         }

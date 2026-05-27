@@ -230,7 +230,7 @@ def submit_procedure():
                 "asset_id": asset.id,
                 "filename": asset.original_filename,
                 "mime_type": asset.mime_type,
-                "public_url": asset.public_url,
+                "public_url": asset.resolved_public_url,
             }
         )
 

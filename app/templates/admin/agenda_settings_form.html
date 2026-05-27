@@ -47,7 +47,7 @@
       <div id="agenda-preview-frame"
            class="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-video flex items-center justify-center">
         {% if block.media %}
-          <img src="{{ block.media.public_url }}" alt="Imagen de fondo" class="h-full w-full object-cover">
+          <img src="{{ block.media.resolved_public_url }}" alt="Imagen de fondo" class="h-full w-full object-cover">
         {% else %}
           <span class="text-xs text-slate-400">Sin imagen seleccionada</span>
         {% endif %}
@@ -97,9 +97,9 @@
       <button type="button"
               class="agenda-asset-option group relative overflow-hidden rounded-xl border-2 border-transparent hover:border-blue-400 focus:border-blue-500 focus:outline-none transition aspect-square bg-slate-100"
               data-asset-id="{{ asset.id }}"
-              data-asset-url="{{ asset.public_url }}"
+              data-asset-url="{{ asset.resolved_public_url }}"
               data-asset-name="{{ asset.original_name }}">
-        <img src="{{ asset.public_url }}" alt="{{ asset.original_name }}" class="h-full w-full object-cover">
+        <img src="{{ asset.resolved_public_url }}" alt="{{ asset.original_name }}" class="h-full w-full object-cover">
         <div class="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-1 text-[10px] text-white truncate opacity-0 group-hover:opacity-100 transition">
           {{ asset.original_name }}
         </div>

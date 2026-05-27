@@ -64,7 +64,7 @@
     </div>
     <p class="mt-2 text-xs text-slate-500">Elegí una imagen de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a>. Recomendado: fondo transparente (PNG), horizontal.</p>
     <div id="site-logo-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 max-w-xs" style="aspect-ratio:3/1;display:flex;align-items:center;justify-content:center;">
-      {% if site.logo %}<img src="{{ site.logo.public_url }}" alt="Logo" style="width:100%;height:100%;object-fit:contain;padding:.5rem;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen seleccionada</div>{% endif %}
+      {% if site.logo %}<img src="{{ site.logo.resolved_public_url }}" alt="Logo" style="width:100%;height:100%;object-fit:contain;padding:.5rem;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen seleccionada</div>{% endif %}
     </div>
   </div>
 
@@ -80,7 +80,7 @@
     </div>
     <p class="mt-2 text-xs text-slate-500">Elegí una imagen de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a>. Recomendado: cuadrado o escudo, fondo transparente (PNG).</p>
     <div id="site-shield-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100" style="width:120px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
-      {% if site.shield %}<img src="{{ site.shield.public_url }}" alt="Escudo" style="width:100%;height:100%;object-fit:contain;padding:.5rem;">{% else %}<div class="text-sm text-slate-400 text-center px-4">Sin imagen</div>{% endif %}
+      {% if site.shield %}<img src="{{ site.shield.resolved_public_url }}" alt="Escudo" style="width:100%;height:100%;object-fit:contain;padding:.5rem;">{% else %}<div class="text-sm text-slate-400 text-center px-4">Sin imagen</div>{% endif %}
     </div>
   </div>
 
@@ -96,7 +96,7 @@
     </div>
     <p class="mt-2 text-xs text-slate-500">Elegí una imagen de <a class="underline" href="{{ url_for('admin.media_library') }}">Medios</a>. Recomendado: 1920×1080 px o mayor, formato paisaje.</p>
     <div id="site-hero-preview-frame" class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 max-w-sm" style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
-      {% if site.hero %}<img src="{{ site.hero.public_url }}" alt="Hero" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen seleccionada</div>{% endif %}
+      {% if site.hero %}<img src="{{ site.hero.resolved_public_url }}" alt="Hero" style="width:100%;height:100%;object-fit:cover;">{% else %}<div class="text-sm text-slate-400 text-center px-6">Sin imagen seleccionada</div>{% endif %}
     </div>
   </div>
 
@@ -116,7 +116,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
       <div id="site-logo-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        {% if site.logo %}<img src="{{ site.logo.public_url }}" alt="" style="width:100%;height:100%;object-fit:contain;padding:.25rem;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+        {% if site.logo %}<img src="{{ site.logo.resolved_public_url }}" alt="" style="width:100%;height:100%;object-fit:contain;padding:.25rem;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
       </div>
       <div>
         <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
@@ -128,8 +128,8 @@
     <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
         {% for asset in media_assets %}
-        <div role="button" tabindex="0" class="js-site-logo-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
-          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div role="button" tabindex="0" class="js-site-logo-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.resolved_public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.resolved_public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
           <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
         </div>
         {% endfor %}
@@ -152,7 +152,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
       <div id="site-shield-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        {% if site.shield %}<img src="{{ site.shield.public_url }}" alt="" style="width:100%;height:100%;object-fit:contain;padding:.25rem;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+        {% if site.shield %}<img src="{{ site.shield.resolved_public_url }}" alt="" style="width:100%;height:100%;object-fit:contain;padding:.25rem;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
       </div>
       <div>
         <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
@@ -164,8 +164,8 @@
     <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
         {% for asset in media_assets %}
-        <div role="button" tabindex="0" class="js-site-shield-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
-          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div role="button" tabindex="0" class="js-site-shield-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.resolved_public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.resolved_public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
           <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
         </div>
         {% endfor %}
@@ -188,7 +188,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
       <div id="site-hero-picker-current-preview" style="width:64px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        {% if site.hero %}<img src="{{ site.hero.public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
+        {% if site.hero %}<img src="{{ site.hero.resolved_public_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}<span style="font-size:.6rem;color:#94a3b8;padding:.2rem;">—</span>{% endif %}
       </div>
       <div>
         <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;">Selección actual</div>
@@ -200,8 +200,8 @@
     <div style="flex:1;min-height:0;overflow-y:auto;padding:1.25rem 1.5rem;background:#f8fafc;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
         {% for asset in media_assets %}
-        <div role="button" tabindex="0" class="js-site-hero-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
-          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+        <div role="button" tabindex="0" class="js-site-hero-option" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.original_filename|e }}" data-asset-url="{{ asset.resolved_public_url|e }}" data-search="{{ asset.original_filename|lower|e }} {{ asset.id }}" style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:2px solid #e2e8f0;transition:border-color .15s,box-shadow .15s;" onmouseover="this.style.borderColor='#94a3b8';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';" onmouseout="if(!this.classList.contains('picker-selected')){this.style.borderColor='#e2e8f0';this.style.boxShadow='none';}">
+          <div style="width:100%;height:140px;overflow:hidden;background:#f1f5f9;"><img src="{{ asset.resolved_public_url }}" alt="{{ asset.original_filename }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
           <div style="padding:.6rem .75rem;border-top:1px solid #f1f5f9;"><div style="font-size:.7rem;color:#94a3b8;font-weight:600;">#{{ asset.id }}</div><div style="font-size:.8rem;color:#334155;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem;">{{ asset.original_filename }}</div></div>
         </div>
         {% endfor %}

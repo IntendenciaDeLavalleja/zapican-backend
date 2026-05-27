@@ -19,23 +19,23 @@
   {% for a in assets %}
   <div class="card !p-2">
     {% if a.mime_type.startswith('image/') %}
-    <img src="{{ a.public_url }}" alt="{{ a.original_filename }}" loading="lazy" decoding="async" fetchpriority="low" class="w-full h-32 object-cover rounded">
+    <img src="{{ a.resolved_public_url }}" alt="{{ a.original_filename }}" loading="lazy" decoding="async" fetchpriority="low" class="w-full h-32 object-cover rounded">
     {% else %}
     <div class="w-full h-32 flex items-center justify-center bg-slate-100 rounded text-slate-500 text-xs">{{ a.mime_type }}</div>
     {% endif %}
     <div class="mt-2 text-xs space-y-2">
       <div><strong>ID:</strong> <code>{{ a.id }}</code></div>
       <div class="truncate" title="{{ a.original_filename }}">{{ a.original_filename }}</div>
-      <div class="text-slate-500 break-all">{{ a.public_url }}</div>
+      <div class="text-slate-500 break-all">{{ a.resolved_public_url }}</div>
       <button
         type="button"
         class="btn btn-secondary !py-1 !px-2 !text-xs w-full js-open-media-modal"
         data-asset-id="{{ a.id }}"
         data-asset-name="{{ a.original_filename|e }}"
-        data-asset-url="{{ a.public_url|e }}"
+        data-asset-url="{{ a.resolved_public_url|e }}"
         data-asset-mime="{{ a.mime_type|e }}"
         data-asset-public="{{ 'true' if a.is_public else 'false' }}"
-        data-asset-preview="{{ a.public_url if a.mime_type.startswith('image/') else '' }}"
+        data-asset-preview="{{ a.resolved_public_url if a.mime_type.startswith('image/') else '' }}"
       >
         Editar
       </button>

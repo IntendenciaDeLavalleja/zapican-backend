@@ -62,7 +62,7 @@ class NewsPost(TimestampMixin, db.Model):
             "title": repair_human_text(self.title),
             "slug": self.slug,
             "excerpt": repair_human_text(self.excerpt),
-            "cover_url": self.cover.public_url if self.cover else None,
+            "cover_url": self.cover.resolved_public_url if self.cover else None,
             "category": self.category.to_public_dict() if self.category else None,
             "is_featured": self.is_featured,
             "published_at": self.published_at.isoformat() if self.published_at else None,
@@ -76,7 +76,7 @@ class NewsPost(TimestampMixin, db.Model):
             "seo": {
                 "title": repair_human_text(self.seo_title or self.title),
                 "description": repair_human_text(self.seo_description or self.excerpt),
-                "og_image": (self.og_image or self.cover).public_url if (self.og_image or self.cover) else None,
+                "og_image": (self.og_image or self.cover).resolved_public_url if (self.og_image or self.cover) else None,
             },
         }
 
@@ -112,7 +112,7 @@ class Event(TimestampMixin, db.Model):
             "start_datetime": self.start_datetime.isoformat() if self.start_datetime else None,
             "end_datetime": self.end_datetime.isoformat() if self.end_datetime else None,
             "location_name": repair_human_text(self.location_name),
-            "cover_url": self.cover.public_url if self.cover else None,
+            "cover_url": self.cover.resolved_public_url if self.cover else None,
             "category": repair_human_text(self.category),
             "is_featured": self.is_featured,
         }
@@ -155,7 +155,7 @@ class MunicipalMeeting(TimestampMixin, db.Model):
             "address": repair_human_text(self.address),
             "agenda_html": repair_human_text(self.agenda_html),
             "minutes_html": repair_human_text(self.minutes_html),
-            "document_url": self.document.public_url if self.document else None,
+            "document_url": self.document.resolved_public_url if self.document else None,
             "status": self.status,
         }
 

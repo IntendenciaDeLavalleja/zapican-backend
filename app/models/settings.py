@@ -67,9 +67,9 @@ class SiteSettings(TimestampMixin, db.Model):
             "name": repair_human_text(self.name),
             "short_description": repair_human_text(self.short_description),
             "long_description": repair_human_text(self.long_description),
-            "logo_url": self.logo.public_url if self.logo else None,
-            "shield_url": self.shield.public_url if self.shield else None,
-            "hero_url": self.hero.public_url if self.hero else None,
+            "logo_url": self.logo.resolved_public_url if self.logo else None,
+            "shield_url": self.shield.resolved_public_url if self.shield else None,
+            "hero_url": self.hero.resolved_public_url if self.hero else None,
             "address": repair_human_text(self.address),
             "phone": self.phone,
             "email": self.email,
@@ -82,7 +82,7 @@ class SiteSettings(TimestampMixin, db.Model):
             "seo": {
                 "title": repair_human_text(self.seo_title or self.name),
                 "description": repair_human_text(self.seo_description or self.short_description),
-                "og_image": self.seo_og.public_url if self.seo_og else (self.hero.public_url if self.hero else None),
+                "og_image": self.seo_og.resolved_public_url if self.seo_og else (self.hero.resolved_public_url if self.hero else None),
             }
         }
 
@@ -169,7 +169,7 @@ class Authority(TimestampMixin, db.Model):
             "twitter_url": self.twitter_url,
             "linkedin_url": self.linkedin_url,
             "order_index": self.order_index,
-            "photo_url": self.photo.public_url if self.photo else None,
+            "photo_url": self.photo.resolved_public_url if self.photo else None,
         }
 
 class PageBlock(TimestampMixin, db.Model):
@@ -199,7 +199,7 @@ class PageBlock(TimestampMixin, db.Model):
             "content": repair_json_text(self.config_json or {}),
             "content_html": repair_human_text(self.content_html),
             "config_json": repair_json_text(self.config_json),
-            "media_url": self.media.public_url if self.media else None,
+            "media_url": self.media.resolved_public_url if self.media else None,
         }
 
 
